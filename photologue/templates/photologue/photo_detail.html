@@ -1,5 +1,7 @@
 {% extends "photologue/root.html" %}
 
+{% load i18n %}
+
 {% load photologue_tags %}
 
 {% block title %}{{ object.title }}{% endblock %}
@@ -12,10 +14,10 @@
     {% if object.caption %}<p>{{ object.caption }}</p>{% endif %}
 </div>
 {% if object.public_galleries %}
-<h2>This photo is found in the following galleries:</h2>
+<h2>{% trans "This photo is found in the following galleries" %}:</h2>
 <ol>
 {% for gallery in object.public_galleries %}
-    <li>{%previous_in_gallery object gallery%} <a href="{{ gallery.get_absolute_url }}">{{ gallery.title }}</a> {%next_in_gallery object gallery%}</li>
+    <li>{% previous_in_gallery object gallery %} <a href="{{ gallery.get_absolute_url }}">{{ gallery.title }}</a> {% next_in_gallery object gallery %}</li>
 {% endfor %}
 </ol>
 {% endif %}

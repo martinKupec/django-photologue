@@ -5,8 +5,13 @@ from django.contrib import admin
 from django.contrib.contenttypes import generic
 from models import *
 
+try:
+    from batchadmin.admin import BatchModelAdmin
+except ImportError:
+    BatchModelAdmin = admin.ModelAdmin
 
-class GalleryAdmin(admin.ModelAdmin):
+class GalleryAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
     list_display = ('title', 'date_added', 'photo_count', 'is_public')
     list_filter = ['date_added', 'is_public']
     date_hierarchy = 'date_added'
@@ -25,7 +30,8 @@ class GalleryAdmin(admin.ModelAdmin):
               "photologue/js/jquery.init.js",
               "photologue/js/photoboard.js", )
 
-class PhotoAdmin(admin.ModelAdmin):
+class PhotoAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
@@ -38,7 +44,8 @@ class GalleryPermissionAdmin(admin.ModelAdmin):
     search_fields = ['gallery', 'users']
     filter_horizontal = ('users',)
 
-class PhotoEffectAdmin(admin.ModelAdmin):
+class PhotoEffectAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
     list_display = ('name', 'description', 'color', 'brightness', 'contrast', 'sharpness', 'filters', 'admin_sample')
     fieldsets = (
         (None, {
@@ -58,7 +65,8 @@ class PhotoEffectAdmin(admin.ModelAdmin):
         }),
     )
 
-class PhotoSizeAdmin(admin.ModelAdmin):
+class PhotoSizeAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
     list_display = ('name', 'width', 'height', 'crop', 'pre_cache', 'effect', 'increment_count')
     fieldsets = (
         (None, {
@@ -72,8 +80,8 @@ class PhotoSizeAdmin(admin.ModelAdmin):
         }),
     )
 
-
-class WatermarkAdmin(admin.ModelAdmin):
+class WatermarkAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
     list_display = ('name', 'opacity', 'style')
 
 
