@@ -18,11 +18,4 @@
 <p>{% trans "No photos were found." %}</p>
 {% endif %}
 
-{% if is_paginated %}
-<p>{{ hits }} {% trans "photos total." %}</p>
-<div id="page_controls">
-    <p>{% if has_previous %}<a href="{% url pl-photo-list previous %}">{% trans "Previous" %}</a> | {% endif %} {% trans "page" %} {{ page }} {% trans "of" %} {{ pages }} {% if has_next %}| <a href="{% url pl-photo-list next %}">{% trans "Next" %}</a>{% endif %}</p>
-</div>
-{% endif %}
-
 {% endblock %}

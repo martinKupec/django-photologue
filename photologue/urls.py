@@ -16,7 +16,7 @@ urlpatterns = patterns('django.views.generic.date_based',
 )
 urlpatterns += patterns('django.views.generic.list_detail',
     url(r'^gallery/(?P<slug>[\-\d\w]+)/$', 'object_detail', {'slug_field': 'title_slug', 'queryset': Gallery.objects.filter(is_public=True), 'extra_context':{'sample_size':SAMPLE_SIZE}}, name='pl-gallery'),
-    url(r'^gallery/page/(?P<page>[0-9]+)/$', 'object_list', {'queryset': Gallery.objects.filter(is_public=True), 'allow_empty': True, 'paginate_by': 5, 'extra_context':{'sample_size':SAMPLE_SIZE}}, name='pl-gallery-list'),
+    url(r'^gallery/page/(?P<page>[0-9]+)/$', 'object_list', {'queryset': Gallery.objects.filter(is_public=True), 'allow_empty': True, 'extra_context':{'sample_size':SAMPLE_SIZE}}, name='pl-gallery-list'),
 )
 
 # photographs
@@ -33,7 +33,7 @@ urlpatterns += patterns('photologue.views',
 )
 urlpatterns += patterns('django.views.generic.list_detail',
     url(r'^photo/(?P<slug>[\-\d\w]+)/$', 'object_detail', {'slug_field': 'title_slug', 'queryset': Photo.objects.filter(is_public=True)}, name='pl-photo'),
-    url(r'^photo/page/(?P<page>[0-9]+)/$', 'object_list', {'queryset': Photo.objects.filter(is_public=True), 'allow_empty': True, 'paginate_by': 20}, name='pl-photo-list'),
+    url(r'^photo/page/(?P<page>[0-9]+)/$', 'object_list', {'queryset': Photo.objects.filter(is_public=True), 'allow_empty': True}, name='pl-photo-list'),
 )
 
 
