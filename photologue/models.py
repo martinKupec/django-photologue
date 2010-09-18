@@ -143,21 +143,10 @@ class Gallery(models.Model):
         return reverse('pl-gallery', args=[self.title_slug])
 
     def latest(self, limit=LATEST_LIMIT, public=True):
-        if not limit:
-            limit = self.photo_count()
-        if public:
-            return self.public()[:limit]
-        else:
-            return self.photos.all()[:limit]
+        return self.photos.latest(limit, public)
 
     def sample(self, count=0, public=True):
-        if count == 0 or count > self.photo_count():
-            count = self.photo_count()
-        if public:
-            photo_set = self.public()
-        else:
-            photo_set = self.photos.all()
-        return random.sample(photo_set, count)
+        return self.photos.sample(count, public)
 
     def cover(self):
         try:
@@ -166,10 +155,7 @@ class Gallery(models.Model):
             return self.photos.all()[0]
 
     def photo_count(self, public=True):
-        if public:
-            return self.public().count()
-        else:
-            return self.photos.all().count()
+        return self.photos.photo_count(public)
     photo_count.short_description = _('count')
     
     def latest_photo(self, public=True):
@@ -182,7 +168,7 @@ class Gallery(models.Model):
             return False
 
     def public(self):
-        return self.photos.filter(is_public=True)
+        return self.photos.public()
 
     def first_zip(self):
         try:
@@ -541,6 +527,33 @@ class ImageModel(models.Model):
         os.remove(self.image.path)
         super(ImageModel, self).delete()
 
+class PhotoManager(models.Manager):
+    def latest(self, limit=LATEST_LIMIT, public=True):
+        if public:
+            photo_set = self.public()
+        else:
+            photo_set = self.all()
+        if limit == 0:
+            return photo_set
+        return photo_set[:limit]
+
+    def photo_count(self, is_public=True):
+        if is_public:
+            return self.public().count()
+        else:
+            return self.count()
+
+    def public(self):
+        return self.filter(is_public=True)
+
+    def sample(self, count=0, public=True):
+        if public:
+            photo_set = self.public().order_by('?')
+        else:
+            photo_set = self.order_by('?')
+        if count == 0:
+            return photo_set
+        return photo_set[:count]
 
 from django.contrib.contenttypes import generic
 
@@ -562,6 +575,8 @@ class Photo(ImageModel):
     date_added = models.DateTimeField(_('date added'), default=datetime.now, editable=False)
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Public photographs will be displayed in the default views.'))
     tags = TaggableManager()
+
+    objects = PhotoManager()
 
     class Meta:
         ordering = ['-date_added']
