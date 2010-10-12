@@ -564,7 +564,7 @@ class Photo(ImageModel):
 
 
 class BaseEffect(models.Model):
-    name = models.CharField(_('name'), max_length=30, unique=True)
+    name = models.CharField(_('name'), max_length=50, unique=True)
     description = models.TextField(_('description'), blank=True)
 
     class Meta:
