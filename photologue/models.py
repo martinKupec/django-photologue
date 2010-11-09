@@ -141,7 +141,7 @@ class Gallery(models.Model):
         get_latest_by = 'date_added'
         verbose_name = _('gallery')
         verbose_name_plural = _('galleries')
-
+    
     def __unicode__(self):
         return self.title
 
@@ -177,10 +177,27 @@ class Gallery(models.Model):
 
     def public(self):
         return self.photos.filter(is_public=True)
+    
+    def first_zip(self):
+        try:
+            return self.galleryupload_set.all()[0]
+        except:
+            return None
+
+class GalleryPermission(models.Model):
+    gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to set the users and permissions for.'))
+    users = models.ManyToManyField('auth.user')
+    
+    can_access_gallery = models.BooleanField(_('can view thumbnails'), default=True, help_text=_('Uncheck this to prevent the users from seeing the gallery.'))
+    can_see_normal_size = models.BooleanField(_('can see normal size images'), default=True, help_text=_('Uncheck to prevent users from seeing screen-size images.'))
+    can_download_full_size = models.BooleanField(_('can download full-size images'), default=True, help_text=_('Uncheck this to prevent users from downloading full-size images.'))    
+    can_download_zip = models.BooleanField(_('can download zip files of the whole gallery'), default=True, help_text=_('Uncheck this to prevent users from downloading a zip file of the whole gallery.'))
+    
+
 
 
 class GalleryUpload(models.Model):
-    zip_file = models.FileField(_('images file (.zip)'), upload_to=PHOTOLOGUE_DIR+"/temp",
+    zip_file = models.FileField(_('images file (.zip)'), upload_to=PHOTOLOGUE_DIR+"/zip-uploads",
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
     title = models.CharField(_('title'), max_length=75, help_text=_('All photos in the gallery will be given a title made up of the gallery title + a sequential number.'))
@@ -196,7 +213,7 @@ class GalleryUpload(models.Model):
     def save(self, *args, **kwargs):
         super(GalleryUpload, self).save(*args, **kwargs)
         gallery = self.process_zipfile()
-        super(GalleryUpload, self).delete()
+        # super(GalleryUpload, self).delete()
         return gallery
 
     def process_zipfile(self):
