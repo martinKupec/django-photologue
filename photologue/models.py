@@ -16,6 +16,7 @@ from django.template.defaultfilters import slugify
 from django.utils.encoding import smart_str, force_unicode
 from django.utils.functional import curry
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth.models import User
 
 # Required PIL classes may or may not be available from the root namespace
 # depending on the installation method used.
@@ -186,7 +187,7 @@ class Gallery(models.Model):
 
 class GalleryPermission(models.Model):
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to set the users and permissions for.'))
-    users = models.ManyToManyField('auth.user', related_name='my_galleries', verbose_name=_('Has Gallery Access'),
+    users = models.ManyToManyField(User, related_name='my_galleries', verbose_name=_('Has Gallery Access'),
                                     null=True, blank=True)
     
     can_access_gallery = models.BooleanField(_('can view thumbnails'), default=True, help_text=_('Uncheck this to prevent the users from seeing the gallery.'))
