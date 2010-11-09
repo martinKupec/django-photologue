@@ -74,7 +74,7 @@ class ImageOverrideInline(generic.GenericTabularInline):
 
 admin.site.register(Gallery, GalleryAdmin)
 admin.site.register(GalleryUpload, GalleryUploadAdmin)
-admin.site.register(GalleryPermission, GalleryUploadAdmin)
+admin.site.register(GalleryPermission, GalleryPermissionAdmin)
 admin.site.register(Photo, PhotoAdmin)
 admin.site.register(PhotoEffect, PhotoEffectAdmin)
 admin.site.register(PhotoSize, PhotoSizeAdmin)
