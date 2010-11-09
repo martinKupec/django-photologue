@@ -280,6 +280,7 @@ class ImageModel(models.Model):
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
     effect = models.ForeignKey('PhotoEffect', null=True, blank=True, related_name="%(class)s_related", verbose_name=_('effect'))
+    is_thumbnail = models.BooleanField(_('Is the main thumbnail for the gallery'), default=False, help_text=_('This image will show up as the thumbnail for the gallery.'))
 
     class Meta:
         abstract = True
