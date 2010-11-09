@@ -186,7 +186,7 @@ class Gallery(models.Model):
 
 class GalleryPermission(models.Model):
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to set the users and permissions for.'))
-    users = models.ManyToManyField('auth.user', related_name='my_galleries', verbose_name=_('Gallery Permission Set'),
+    users = models.ManyToManyField('auth.user', related_name='my_galleries', verbose_name=_('Has Gallery Access'),
                                     null=True, blank=True)
     
     can_access_gallery = models.BooleanField(_('can view thumbnails'), default=True, help_text=_('Uncheck this to prevent the users from seeing the gallery.'))
