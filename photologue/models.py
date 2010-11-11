@@ -169,6 +169,12 @@ class Gallery(models.Model):
             photo_set = self.photos.all()
         return random.sample(photo_set, count)
 
+    def cover(self):
+        try:
+            return self.photos.filter(is_thumbnail=True).all()[0]
+        except:
+            return self.photos.all()[0]
+
     def photo_count(self, public=True):
         if public:
             return self.public().count()
@@ -199,7 +205,7 @@ class GalleryPermission(models.Model):
 
 
 class GalleryUpload(models.Model):
-    zip_file = models.FileField(_('images file (.zip)'), upload_to=PHOTOLOGUE_DIR+"/zip-uploads",
+    zip_file = models.FileField(_('images file zip'), upload_to=PHOTOLOGUE_DIR+"/zip-uploads",
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
     title = models.CharField(_('title'), max_length=75, help_text=_('All photos in the gallery will be given a title made up of the gallery title + a sequential number.'))
