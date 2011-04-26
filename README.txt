@@ -2,6 +2,7 @@ Photologue
 
 Powerful image management for the Django web framework.
 
+//Forked by powellc to move from django-tagging to django-taggit!//
 
 Installation
 ============
