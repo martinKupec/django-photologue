@@ -177,9 +177,9 @@ class Gallery(models.Model):
     
     def latest_photo(self, public=True):
         if public:
-            return self.public.latest(limit=1)
+            return self.latest(limit=1)[0]
         else:
-            return self.photos.all().latest(limit=1)
+            return self.latest(limit=1)[0]
 
     def public(self):
         return self.photos.filter(is_public=True)
