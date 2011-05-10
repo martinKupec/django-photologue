@@ -174,6 +174,12 @@ class Gallery(models.Model):
         else:
             return self.photos.all().count()
     photo_count.short_description = _('count')
+    
+    def latest_photo(self, public=True):
+        if public:
+            return self.public.latest(limit=1)
+        else:
+            return self.photos.all().latest(limit=1)
 
     def public(self):
         return self.photos.filter(is_public=True)
