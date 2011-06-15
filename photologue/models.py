@@ -134,7 +134,7 @@ class Gallery(models.Model):
     is_public = models.BooleanField(_('is public'), default=True,
                                     help_text=_('Public galleries will be displayed in the default views.'))
     photos = models.ManyToManyField('Photo', related_name='galleries', verbose_name=_('photos'),
-                                    null=True, blank=True)
+                                    null=True, blank=True, through="photologue.GalleryPhoto")
     tags = TagField(help_text=tagfield_help_text, verbose_name=_('tags'))
 
     class Meta:
@@ -142,7 +142,7 @@ class Gallery(models.Model):
         get_latest_by = 'date_added'
         verbose_name = _('gallery')
         verbose_name_plural = _('galleries')
-    
+
     def __unicode__(self):
         return self.title
 
@@ -184,7 +184,7 @@ class Gallery(models.Model):
 
     def public(self):
         return self.photos.filter(is_public=True)
-    
+
     def first_zip(self):
         try:
             return self.galleryupload_set.all()[0]
@@ -195,12 +195,12 @@ class GalleryPermission(models.Model):
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to set the users and permissions for.'))
     users = models.ManyToManyField(User, related_name='my_galleries', verbose_name=_('Has Gallery Access'),
                                     null=True, blank=True)
-    
+
     can_access_gallery = models.BooleanField(_('can view thumbnails'), default=True, help_text=_('Uncheck this to prevent the users from seeing the gallery.'))
     can_see_normal_size = models.BooleanField(_('can see normal size images'), default=True, help_text=_('Uncheck to prevent users from seeing screen-size images.'))
-    can_download_full_size = models.BooleanField(_('can download full-size images'), default=True, help_text=_('Uncheck this to prevent users from downloading full-size images.'))    
+    can_download_full_size = models.BooleanField(_('can download full-size images'), default=True, help_text=_('Uncheck this to prevent users from downloading full-size images.'))
     can_download_zip = models.BooleanField(_('can download zip files of the whole gallery'), default=True, help_text=_('Uncheck this to prevent users from downloading a zip file of the whole gallery.'))
-    
+
 
 
 
@@ -271,7 +271,8 @@ class GalleryUpload(models.Model):
                                           is_public=self.is_public,
                                           tags=self.tags)
                             photo.image.save(filename, ContentFile(data))
-                            gallery.photos.add(photo)
+                            GalleryPhoto.objects.create(gallery=gallery, photo=photo)
+#                            gallery.photos.add(photo)
                             count = count + 1
                             break
                         count = count + 1
@@ -280,7 +281,7 @@ class GalleryUpload(models.Model):
 
 
 class ImageModel(models.Model):
-    image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, 
+    image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH,
                               upload_to=get_storage_path, blank=True)
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
     view_count = models.PositiveIntegerField(default=0, editable=False)
@@ -432,7 +433,7 @@ class ImageModel(models.Model):
 
     def create_size(self, photosize):
         # Fail gracefully if we don't have an image.
-        if not self.image: 
+        if not self.image:
             return
 
         if self.size_exists(photosize):
@@ -443,7 +444,7 @@ class ImageModel(models.Model):
         # check if we have overrides and use that instead
         override = self.get_override(photosize)
         image_model_obj = override if override else self
-        
+
         try:
             im = Image.open(image_model_obj.image.path)
         except IOError:
@@ -592,6 +593,10 @@ class Photo(ImageModel):
         except Photo.DoesNotExist:
             return None
 
+class GalleryPhoto(models.Model):
+    gallery = models.ForeignKey("photologue.Gallery")
+    photo = models.ForeignKey("photologue.Photo")
+    ordering = models.IntegerField(default=0)
 
 class BaseEffect(models.Model):
     name = models.CharField(_('name'), max_length=30, unique=True)
@@ -797,3 +802,4 @@ def add_methods(sender, instance, signal, *args, **kwargs):
 
 # connect the add_accessor_methods function to the post_init signal
 post_init.connect(add_methods)
+
