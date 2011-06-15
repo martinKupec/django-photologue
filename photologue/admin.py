@@ -13,6 +13,18 @@ class GalleryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'title_slug': ('title',)}
     filter_horizontal = ('photos',)
 
+    class Media:
+        css = {
+            'all': ('photologue/css/photoboard.css', )
+        }
+        js = ("photologue/js/jquery-1.5.1.min.js",
+              "photologue/js/jquery.ui.core.min.js",
+              "photologue/js/jquery.ui.widget.min.js",
+              "photologue/js/jquery.ui.mouse.min.js",
+              "photologue/js/jquery.ui.sortable.min.js",
+              "photologue/js/jquery.init.js",
+              "photologue/js/photoboard.js", )
+
 class PhotoAdmin(admin.ModelAdmin):
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
@@ -79,3 +91,4 @@ admin.site.register(Photo, PhotoAdmin)
 admin.site.register(PhotoEffect, PhotoEffectAdmin)
 admin.site.register(PhotoSize, PhotoSizeAdmin)
 admin.site.register(Watermark, WatermarkAdmin)
+
