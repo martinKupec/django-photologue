@@ -2,6 +2,7 @@ import os
 import random
 import shutil
 import zipfile
+import utils
 
 from datetime import datetime
 from inspect import isclass
@@ -9,9 +10,11 @@ from inspect import isclass
 from django.db import models
 from django.db.models.signals import post_init
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
-from django.template.defaultfilters import slugify
+import django.template.defaultfilters
+from photologue.utils.urlify import Downcoder
 from django.utils.encoding import smart_str, force_unicode
 from django.utils.functional import curry
 from django.utils.importlib import import_module
@@ -178,6 +181,9 @@ class Gallery(models.Model):
     def public(self):
         return self.photos.filter(is_public=True)
 
+def slugify(title):
+    downcode = Downcoder().downcode
+    return django.template.defaultfilters.slugify(downcode(title))
 
 class GalleryUpload(models.Model):
     zip_file = models.FileField(_('images file (.zip)'), upload_to=PHOTOLOGUE_DIR+"/temp",
@@ -256,7 +262,7 @@ class GalleryUpload(models.Model):
 
 class ImageModel(models.Model):
     image = models.ImageField(_('image'), max_length=IMAGE_FIELD_MAX_LENGTH, 
-                              upload_to=get_storage_path)
+                              upload_to=get_storage_path, blank=True)
     date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
@@ -285,12 +291,15 @@ class ImageModel(models.Model):
                     (self.get_absolute_url(), func())
             else:
                 return u'<a href="%s"><img src="%s"></a>' % \
-                    (self.image.url, func())
+                    (self.image.url, func()) if self.image else ''
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
 
     def cache_path(self):
-        return os.path.join(os.path.dirname(self.image.path), "cache")
+        try:
+            return os.path.join(os.path.dirname(self.image.path), "cache")
+        except ValueError:
+            ""
 
     def cache_url(self):
         return '/'.join([os.path.dirname(self.image.url), "cache"])
@@ -318,6 +327,8 @@ class ImageModel(models.Model):
             self.create_size(photosize)
         if photosize.increment_count:
             self.increment_count()
+        if not self.image: 
+            return
         return '/'.join([self.cache_url(), self._get_filename_for_size(photosize.name)])
 
     def _get_SIZE_filename(self, size):
@@ -343,8 +354,11 @@ class ImageModel(models.Model):
     def size_exists(self, photosize):
         func = getattr(self, "get_%s_filename" % photosize.name, None)
         if func is not None:
-            if os.path.isfile(func()):
-                return True
+            try:
+                if os.path.isfile(func()):
+                    return True
+            except ValueError:
+                return False
         return False
 
     def resize_image(self, im, photosize):
@@ -387,31 +401,53 @@ class ImageModel(models.Model):
             im = im.resize(new_dimensions, Image.ANTIALIAS)
         return im
 
+    def get_override(self, photosize):
+        """
+        Returns the first ImageOverride object found for this object and photosize.
+        """
+        content_type = ContentType.objects.get_for_model(self)
+        overrides = ImageOverride.objects.filter(object_id=self.id, content_type=content_type, photosize=photosize)
+        if overrides:
+            return overrides[0]
+        else:
+            return None
+
     def create_size(self, photosize):
+        # Fail gracefully if we don't have an image.
+        if not self.image: 
+            return
+
         if self.size_exists(photosize):
             return
         if not os.path.isdir(self.cache_path()):
             os.makedirs(self.cache_path())
+
+        # check if we have overrides and use that instead
+        override = self.get_override(photosize)
+        image_model_obj = override if override else self
+        
         try:
-            im = Image.open(self.image.path)
+            im = Image.open(image_model_obj.image.path)
         except IOError:
             return
+        # Correct colorspace
+        im = utils.colorspace(im)
         # Save the original format
         im_format = im.format
         # Apply effect if found
-        if self.effect is not None:
-            im = self.effect.pre_process(im)
+        if image_model_obj.effect is not None:
+            im = image_model_obj.effect.pre_process(im)
         elif photosize.effect is not None:
             im = photosize.effect.pre_process(im)
         # Resize/crop image
         if im.size != photosize.size and photosize.size != (0, 0):
-            im = self.resize_image(im, photosize)
+            im = image_model_obj.resize_image(im, photosize)
         # Apply watermark if found
         if photosize.watermark is not None:
             im = photosize.watermark.post_process(im)
         # Apply effect if found
-        if self.effect is not None:
-            im = self.effect.post_process(im)
+        if image_model_obj.effect is not None:
+            im = image_model_obj.effect.post_process(im)
         elif photosize.effect is not None:
             im = photosize.effect.post_process(im)
         # Save file
@@ -478,8 +514,21 @@ class ImageModel(models.Model):
     def delete(self):
         assert self._get_pk_val() is not None, "%s object can't be deleted because its %s attribute is set to None." % (self._meta.object_name, self._meta.pk.attname)
         self.clear_cache()
+        os.remove(self.image.path)
         super(ImageModel, self).delete()
 
+
+from django.contrib.contenttypes import generic
+
+class ImageOverride(ImageModel):
+    content_type = models.ForeignKey('contenttypes.ContentType')
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey("content_type", "object_id")
+    photosize = models.ForeignKey('photologue.PhotoSize')
+
+    class Meta():
+        verbose_name = "image override"
+        verbose_name_plural = "image overrides"
 
 class Photo(ImageModel):
     title = models.CharField(_('title'), max_length=100, unique=True)
@@ -656,7 +705,7 @@ class Watermark(BaseEffect):
 
 
 class PhotoSize(models.Model):
-    name = models.CharField(_('name'), max_length=20, unique=True, help_text=_('Photo size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
+    name = models.CharField(_('name'), max_length=64, unique=True, help_text=_('Photo size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
     width = models.PositiveIntegerField(_('width'), default=0, help_text=_('If width is set to "0" the image will be scaled to the supplied height.'))
     height = models.PositiveIntegerField(_('height'), default=0, help_text=_('If height is set to "0" the image will be scaled to the supplied width'))
     quality = models.PositiveIntegerField(_('quality'), choices=JPEG_QUALITY_CHOICES, default=70, help_text=_('JPEG image quality.'))
@@ -680,10 +729,11 @@ class PhotoSize(models.Model):
 
     def clear_cache(self):
         for cls in ImageModel.__subclasses__():
-            for obj in cls.objects.all():
-                obj.remove_size(self)
-                if self.pre_cache:
-                    obj.create_size(self)
+            if not cls._meta.abstract:
+                for obj in cls.objects.all():
+                    obj.remove_size(self)
+                    if self.pre_cache:
+                        obj.create_size(self)
         PhotoSizeCache().reset()
 
     def save(self, *args, **kwargs):

@@ -8,7 +8,7 @@ SOURCE_DIR = os.path.join(ROOT_DIR)
 # Dynamically calculate the version based on photologue.VERSION
 version_tuple = __import__('photologue').VERSION
 if len(version_tuple) == 3:
-    version = "%d.%d_%s" % version_tuple
+    version = "%d.%d.%s" % version_tuple
 else:
     version = "%d.%d" % version_tuple[:2]
 
@@ -29,6 +29,10 @@ setup(
         ]
     },
     zip_safe = False,
+    test_suite="setuptest.SetupTestSuite",
+    tests_require=[
+        'django-setuptest>=0.0.6',
+    ],
     classifiers = ['Development Status :: 5 - Production/Stable',
                    'Environment :: Web Environment',
                    'Framework :: Django',
