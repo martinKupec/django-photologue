@@ -2,12 +2,13 @@ Photologue
 
 Powerful image management for the Django web framework.
 
-//Forked by powellc to move from django-tagging to django-taggit!//
+Forked by powellc to move from django-tagging to django-taggit!
+Merged with other forks and further adjusted by Martin Kupec.
 
 Installation
 ============
 
-Offical releases are available from: http://code.google.com/p/django-photologue/
+Code is available from: https://github.com/martinKupec/django-photologue
 
 
 Source Distribution
@@ -16,16 +17,6 @@ Source Distribution
 Download the .zip distribution file and unpack it. From within the extracted directory run the following command:
 
    python setup.py install
-
-
-Tracking the Development Version
---------------------------------
-
-The current development version of Photologue can be checked out via Subversion from the project site using the following command:
-
-    svn checkout http://django-photologue.googlecode.com/svn/trunk/ photologue-trunk
-
-Then either copy the photologue-trunk/photologue directory or create a symlink to the photologue-trunk/photologue directory somewhere on your python path, such as your Django project or site-packages directory.
 
 You can verify Photologue is available to your project by running the following commands from within your project directory:
 

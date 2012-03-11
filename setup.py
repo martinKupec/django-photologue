@@ -18,7 +18,7 @@ setup(
     description = "Powerful image management for the Django web framework, now using django-taggit!",
     author = "Justin Driscoll",
     author_email = "justin@driscolldev.com",
-    url = "http://code.google.com/p/django-photologue/",
+	url = "https://github.com/martinKupec/django-photologue",
     packages = find_packages(),
     package_data = {
         'photologue': [
