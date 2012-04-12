@@ -12,11 +12,11 @@ except ImportError:
 
 class GalleryAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
-    list_display = ('title', 'date_added', 'photo_count', 'is_public')
+    list_display = ('title', 'date_added', 'media_count', 'is_public')
     list_filter = ['date_added', 'is_public']
     date_hierarchy = 'date_added'
     prepopulated_fields = {'title_slug': ('title',)}
-    filter_horizontal = ('photos',)
+    filter_horizontal = ('media',)
 
     class Media:
         css = {
@@ -32,11 +32,28 @@ class GalleryAdmin(BatchModelAdmin):
 
 class PhotoAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
-    list_display = ('title', 'date_taken', 'date_added', 'is_public', 'tags', 'view_count', 'admin_thumbnail')
+    list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
     list_per_page = 10
     prepopulated_fields = {'title_slug': ('title',)}
+
+    def the_tags(self, obj):
+        return ", ".join(map(lambda x: x.name, obj.tags.all()))
+    the_tags.short_description = 'Tags'
+
+class VideoAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
+    list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
+    list_filter = ['date_added', 'is_public']
+    search_fields = ['title', 'title_slug', 'caption']
+    list_per_page = 10
+    prepopulated_fields = {'title_slug': ('title',)}
+    exclude = ('poster', 'flv_video', 'mp4_video', 'ogv_video', 'webm_video', 'crop_from')
+
+    def the_tags(self, obj):
+        return ", ".join(map(lambda x: x.name, obj.tags.all()))
+    the_tags.short_description = 'Tags'
 
 class GalleryPermissionAdmin(admin.ModelAdmin):
     list_display = ('gallery', 'can_access_gallery', 'can_see_normal_size', 'can_download_full_size', 'can_download_zip',)
@@ -44,7 +61,7 @@ class GalleryPermissionAdmin(admin.ModelAdmin):
     search_fields = ['gallery', 'users']
     filter_horizontal = ('users',)
 
-class PhotoEffectAdmin(BatchModelAdmin):
+class ImageEffectAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
     list_display = ('name', 'description', 'color', 'brightness', 'contrast', 'sharpness', 'filters', 'admin_sample')
     fieldsets = (
@@ -65,7 +82,7 @@ class PhotoEffectAdmin(BatchModelAdmin):
         }),
     )
 
-class PhotoSizeAdmin(BatchModelAdmin):
+class ImageSizeAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
     list_display = ('name', 'width', 'height', 'crop', 'pre_cache', 'effect', 'increment_count')
     fieldsets = (
@@ -80,6 +97,21 @@ class PhotoSizeAdmin(BatchModelAdmin):
         }),
     )
 
+class VideoSizeAdmin(BatchModelAdmin):
+    batch_actions = ['delete_selected']
+    list_display = ('name', 'width', 'height', 'crop', 'increment_count')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'width', 'height')
+        }),
+        ('Options', {
+            'fields': ('upscale', 'crop', 'increment_count')
+        }),
+        #('Enhancements', {
+        #    'fields': ('effect', 'watermark',)
+        #}),
+    )
+
 class WatermarkAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
     list_display = ('name', 'opacity', 'style')
@@ -89,14 +121,15 @@ class GalleryUploadAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False # To remove the 'Save and continue editing' button
 
-class ImageOverrideInline(generic.GenericTabularInline):
-    model = ImageOverride
+class MediaOverrideInline(generic.GenericTabularInline):
+    model = MediaOverride
 
 admin.site.register(Gallery, GalleryAdmin)
 admin.site.register(GalleryUpload, GalleryUploadAdmin)
 admin.site.register(GalleryPermission, GalleryPermissionAdmin)
 admin.site.register(Photo, PhotoAdmin)
-admin.site.register(PhotoEffect, PhotoEffectAdmin)
-admin.site.register(PhotoSize, PhotoSizeAdmin)
+admin.site.register(ImageEffect, ImageEffectAdmin)
+admin.site.register(ImageSize, ImageSizeAdmin)
 admin.site.register(Watermark, WatermarkAdmin)
-
+admin.site.register(Video, VideoAdmin)
+admin.site.register(VideoSize, VideoSizeAdmin)

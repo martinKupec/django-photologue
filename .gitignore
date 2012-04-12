@@ -1,4 +1,9 @@
 *.pyc
 *.egg-info/
 
+db.sqlite
 .DS_Store
+/__init__.py
+/urls.py
+/settings.py
+/manage.py
