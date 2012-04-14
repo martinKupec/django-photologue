@@ -3,8 +3,6 @@ from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from taggit.managers import TaggableManager
-
 from photologue.default_settings import *
 from image import ImageModel
 from gallery import GalleryItemBase

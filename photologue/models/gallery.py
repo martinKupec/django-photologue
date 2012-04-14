@@ -4,9 +4,12 @@ from os import path
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
 from photologue.default_settings import *
 from taggit.managers import TaggableManager
+
+from media import MediaModel
 
 
 class Gallery(models.Model):
@@ -17,9 +20,9 @@ class Gallery(models.Model):
     description = models.TextField(_('description'), blank=True)
     is_public = models.BooleanField(_('is public'), default=True,
                                     help_text=_('Public galleries will be displayed in the default views.'))
-    media = models.ManyToManyField('MediaModel', related_name='galleries', verbose_name=_('media'),
-                                    null=True, blank=True, through="photologue.GalleryMedia")
-    tags = TaggableManager()
+    media = models.ManyToManyField(MediaModel, related_name='galleries', verbose_name=_('media'),
+                                    null=True, blank=True)#, through="GalleryMedia")
+    tags = TaggableManager(blank=True)
 
     class Meta:
         ordering = ['-date_added']
@@ -71,9 +74,8 @@ class Gallery(models.Model):
             return None
 
 class GalleryMedia(models.Model):
-    gallery = models.ForeignKey("photologue.Gallery")
-    media = models.ForeignKey("photologue.MediaModel")
-    ordering = models.IntegerField(default=0)
+    gallery = models.ForeignKey(Gallery)
+    media = models.ForeignKey(MediaModel)
 
 
 class GalleryPermission(models.Model):
@@ -95,7 +97,7 @@ class GalleryUpload(models.Model):
     caption = models.TextField(_('caption'), blank=True, help_text=_('Caption will be added to all items.'))
     description = models.TextField(_('description'), blank=True, help_text=_('A description of this Gallery.'))
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Uncheck this to make the uploaded gallery and included media private.'))
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     class Meta:
         verbose_name = _('gallery upload')
@@ -197,7 +199,7 @@ class GalleryItemBase(models.Model):
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Public photographs will be displayed in the default views.'))
     is_thumbnail = models.BooleanField(_('Is the main thumbnail for the gallery'), default=False, help_text=_('This image will show up as the thumbnail for the gallery.'))
 
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     class Meta:
         abstract = True

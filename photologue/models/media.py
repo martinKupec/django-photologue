@@ -29,6 +29,16 @@ class MediaModel(models.Model):
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
 
+    def __unicode__(self):
+        for subclass in self._meta.get_all_related_objects():
+            acc_name = subclass.get_accessor_name()
+            if not acc_name.endswith('_set') and hasattr(self, acc_name):
+                return getattr(self, acc_name).__unicode__()
+        return super(MediaModel, self).__unicode__()
+
+    def __str__(self):
+        return super(MediaModel, self).__str__()
+
     def cache_path(self):
         try:
             return os.path.join(os.path.dirname(self.file.path), "cache")
@@ -250,7 +260,7 @@ class BaseEffect(models.Model):
             pass
         models.Model.save(self, *args, **kwargs)
         self.create_sample()
-		#FIXME
+        #FIXME
         for size in self.photo_sizes.all():
             size.clear_cache()
         # try to clear all related subclasses of ImageModel
