@@ -20,7 +20,7 @@ class Gallery(models.Model):
     description = models.TextField(_('description'), blank=True)
     is_public = models.BooleanField(_('is public'), default=True,
                                     help_text=_('Public galleries will be displayed in the default views.'))
-    media = models.ManyToManyField(MediaModel, related_name='galleries', verbose_name=_('media'),
+    items = models.ManyToManyField('GalleryItemBase', related_name='galleries', verbose_name=_('items'),
                                     null=True, blank=True)#, through="GalleryMedia")
     tags = TaggableManager(blank=True)
 
@@ -40,22 +40,22 @@ class Gallery(models.Model):
         return reverse('pl-gallery', args=[self.title_slug])
 
     def latest(self, limit=LATEST_LIMIT, public=True):
-        return self.media.latest(limit, public)
+        return self.items.latest(limit, public)
 
     def sample(self, count=0, public=True):
-        return self.media.sample(count, public)
+        return self.items.sample(count, public)
 
     def cover(self):
         try:
-            return self.media.filter(is_thumbnail=True).all()[0]
+            return self.items.filter(is_thumbnail=True).all()[0]
         except:
-            return self.media.all()[0]
+            return self.items.all()[0]
 
-    def media_count(self, public=True):
-        return self.media.media_count(public)
-    media_count.short_description = _('count')
+    def item_count(self, public=True):
+        return self.items.item_count(public)
+    item_count.short_description = _('count')
     
-    def latest_media(self, public=True):
+    def latest_item(self, public=True):
         try:
             if public:
                 return self.latest(limit=1)[0]
@@ -65,7 +65,7 @@ class Gallery(models.Model):
             return False
 
     def public(self):
-        return self.media.public()
+        return self.items.public()
 
     def first_zip(self):
         try:
@@ -73,10 +73,9 @@ class Gallery(models.Model):
         except:
             return None
 
-class GalleryMedia(models.Model):
-    gallery = models.ForeignKey(Gallery)
-    media = models.ForeignKey(MediaModel)
-
+#class GalleryMedia(models.Model):
+#    gallery = models.ForeignKey(Gallery)
+#    media = models.ForeignKey(MediaModel)
 
 class GalleryPermission(models.Model):
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to set the users and permissions for.'))
@@ -190,6 +189,34 @@ class GalleryUpload(models.Model):
             zip.close()
             return gallery
 
+class GalleryItemManager(models.Manager):
+    def latest(self, limit=LATEST_LIMIT, public=True):
+        if public:
+            item_set = self.public()
+        else:
+            item_set = self.all()
+        if limit == 0:
+            return item_set
+        return item_set[:limit]
+
+    def item_count(self, is_public=True):
+        if is_public:
+            return self.public().count()
+        else:
+            return self.count()
+
+    def public(self):
+        return self.filter(is_public=True)
+
+    def sample(self, count=0, public=True):
+        if public:
+            item_set = self.public().order_by('?')
+        else:
+            item_set = self.order_by('?')
+        if count == 0:
+            return item_set
+        return item_set[:count]
+
 class GalleryItemBase(models.Model):
     title = models.CharField(_('title'), max_length=100, unique=True)
     title_slug = models.SlugField(_('slug'), unique=True,
@@ -200,9 +227,9 @@ class GalleryItemBase(models.Model):
     is_thumbnail = models.BooleanField(_('Is the main thumbnail for the gallery'), default=False, help_text=_('This image will show up as the thumbnail for the gallery.'))
 
     tags = TaggableManager(blank=True)
+    objects = GalleryItemManager()
 
     class Meta:
-        abstract = True
         ordering = ['-date_added']
         get_latest_by = 'date_added'
 
@@ -218,22 +245,27 @@ class GalleryItemBase(models.Model):
         super(GalleryItemBase, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('ml-media', args=[self.title_slug])
+        for subclass in self._meta.get_all_related_objects():
+            acc_name = subclass.get_accessor_name()
+            if not acc_name.endswith('_set') and hasattr(self, acc_name):
+                return getattr(self, acc_name).get_absolute_url()
+        # Fallback
+        return ""
 
     def public_galleries(self):
-        """Return the public galleries to which this photo belongs."""
+        """Return the public galleries to which this item belongs."""
         return self.galleries.filter(is_public=True)
 
     def get_previous_in_gallery(self, gallery):
         try:
             return self.get_previous_by_date_added(galleries__exact=gallery,
                                                    is_public=True)
-        except Media.DoesNotExist:
+        except GalleryItemBase.DoesNotExist:
             return None
 
     def get_next_in_gallery(self, gallery):
         try:
             return self.get_next_by_date_added(galleries__exact=gallery,
                                                is_public=True)
-        except Media.DoesNotExist:
+        except GalleryItemBase.DoesNotExist:
             return None

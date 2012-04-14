@@ -2,12 +2,15 @@ from inspect import isclass
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
 from photologue.default_settings import *
 from photologue.utils import EXIF
 from photologue.utils.reflection import add_reflection
 from photologue.utils.watermark import apply_watermark
 from media import *
+
+import photologue.utils as utils
 
 # Required PIL classes may or may not be available from the root namespace
 # depending on the installation method used.
@@ -50,10 +53,18 @@ class ImageModel(MediaModel):
             except:
                 return {}
 
-    def create_size(self, imagesize):
+    def get_absolute_url(self):
+        return reverse('pl-photo', args=[self.title_slug])
+
+    def create_size(self, mediasize):
         # Fail gracefully if we don't have an image.
-        if not self.image:
+        if not self.file:
             return
+
+        # Check if we got right size
+        if not hasattr(mediasize, 'imagesize'):
+            return
+        imagesize = mediasize.imagesize
 
         if self.size_exists(imagesize):
             return

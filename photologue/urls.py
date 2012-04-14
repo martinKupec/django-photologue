@@ -36,4 +36,8 @@ urlpatterns += patterns('django.views.generic.list_detail',
     url(r'^photo/page/(?P<page>[0-9]+)/$', 'object_list', {'queryset': Photo.objects.filter(is_public=True), 'allow_empty': True}, name='pl-photo-list'),
 )
 
+urlpatterns += patterns('django.views.generic.list_detail',
+    url(r'^video/(?P<slug>[\-\d\w]+)/$', 'object_detail', {'slug_field': 'title_slug', 'queryset': Video.objects.filter(is_public=True)}, name='pl-video'),
+    url(r'^video/page/(?P<page>[0-9]+)/$', 'object_list', {'queryset': Video.objects.filter(is_public=True), 'allow_empty': True}, name='pl-video-list'),
+)
 

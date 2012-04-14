@@ -3,6 +3,7 @@ from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_init, post_save
 from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 
 from photologue.default_settings import *
 from media import *
@@ -51,6 +52,9 @@ class VideoModel(MediaModel):
             self.poster.delete()
         super(VideoModel, self).delete()
 
+    def get_absolute_url(self):
+        return reverse('pl-video', args=[self.title_slug])
+
     def create_size(self, videosize):
         # Fail gracefully if we don't have an video.
         if not self.original_video:
@@ -86,7 +90,7 @@ class ConvertVideo(models.Model):
     video = generic.GenericForeignKey('content_type', 'object_id')
     message = models.TextField(null=True, blank=True)
     converted = models.BooleanField()
-    videosize = models.ForeignKey(VideoSize, blank=True)
+    videosize = models.ForeignKey(VideoSize, null=True, blank=True)
 
     def __unicode__(self):
         return unicode(self.video)

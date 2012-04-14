@@ -12,12 +12,12 @@ except ImportError:
 
 class GalleryAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
-    list_display = ('title', 'date_added', 'media_count', 'is_public')
+    list_display = ('title', 'date_added', 'item_count', 'is_public')
     list_filter = ['date_added', 'is_public']
     date_hierarchy = 'date_added'
     prepopulated_fields = {'title_slug': ('title',)}
-    search_fields = ['media']
-    filter_horizontal = ('media',)
+    search_fields = ['items']
+    filter_horizontal = ('items',)
 
 class PhotoAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']

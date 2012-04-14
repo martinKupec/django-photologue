@@ -3,6 +3,7 @@ from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
 from django.utils.functional import curry
 from django.utils.encoding import smart_str, force_unicode
 
@@ -29,15 +30,15 @@ class MediaModel(models.Model):
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
 
-    def __unicode__(self):
-        for subclass in self._meta.get_all_related_objects():
-            acc_name = subclass.get_accessor_name()
-            if not acc_name.endswith('_set') and hasattr(self, acc_name):
-                return getattr(self, acc_name).__unicode__()
-        return super(MediaModel, self).__unicode__()
+    #def __unicode__(self):
+    #    for subclass in self._meta.get_all_related_objects():
+    #        acc_name = subclass.get_accessor_name()
+    #        if not acc_name.endswith('_set') and hasattr(self, acc_name):
+    #            return getattr(self, acc_name).__unicode__()
+    #    return super(MediaModel, self).__unicode__()
 
-    def __str__(self):
-        return super(MediaModel, self).__str__()
+    #def __str__(self):
+    #    return super(MediaModel, self).__str__()
 
     def cache_path(self):
         try:
@@ -66,7 +67,7 @@ class MediaModel(models.Model):
             self.create_size(mediasize)
         if mediasize.increment_count:
             self.increment_count()
-        if not self.image: 
+        if not self.file: 
             return
         return '/'.join([self.cache_url(), self._get_filename_for_size(mediasize.name)])
 
@@ -110,8 +111,7 @@ class MediaModel(models.Model):
         Returns the first MediaOverride object found for this object and mediasize.
         """
         content_type = ContentType.objects.get_for_model(self)
-        #overrides = MediaOverride.objects.filter(object_id=self.id, content_type=content_type, mediasize=mediasize)
-        overrides = type(self).objects.filter(object_id=self.id, content_type=content_type, mediasize=mediasize)
+        overrides = MediaOverride.objects.filter(object_id=self.id, content_type=content_type, mediasize=mediasize)
         if overrides:
             return overrides[0]
         else:
@@ -155,7 +155,7 @@ class MediaModel(models.Model):
     def delete(self):
         assert self._get_pk_val() is not None, "%s object can't be deleted because its %s attribute is set to None." % (self._meta.object_name, self._meta.pk.attname)
         self.clear_cache()
-        os.remove(self.image.path)
+        os.remove(self.file.path)
         super(MediaModel, self).delete()
 
 class MediaOverride(MediaModel):
