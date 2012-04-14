@@ -16,19 +16,8 @@ class GalleryAdmin(BatchModelAdmin):
     list_filter = ['date_added', 'is_public']
     date_hierarchy = 'date_added'
     prepopulated_fields = {'title_slug': ('title',)}
+    search_fields = ['media']
     filter_horizontal = ('media',)
-
-    class Media:
-        css = {
-            'all': ('photologue/css/photoboard.css', )
-        }
-        js = ("photologue/js/jquery-1.5.1.min.js",
-              "photologue/js/jquery.ui.core.min.js",
-              "photologue/js/jquery.ui.widget.min.js",
-              "photologue/js/jquery.ui.mouse.min.js",
-              "photologue/js/jquery.ui.sortable.min.js",
-              "photologue/js/jquery.init.js",
-              "photologue/js/photoboard.js", )
 
 class PhotoAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
@@ -55,7 +44,7 @@ class VideoAdmin(BatchModelAdmin):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))
     the_tags.short_description = 'Tags'
 
-class GalleryPermissionAdmin(admin.ModelAdmin):
+class GalleryPermissionAdmin(BatchModelAdmin):
     list_display = ('gallery', 'can_access_gallery', 'can_see_normal_size', 'can_download_full_size', 'can_download_zip',)
     list_filter = ['can_access_gallery', 'can_see_normal_size', 'can_download_full_size', 'can_download_zip']
     search_fields = ['gallery', 'users']
@@ -117,7 +106,7 @@ class WatermarkAdmin(BatchModelAdmin):
     list_display = ('name', 'opacity', 'style')
 
 
-class GalleryUploadAdmin(admin.ModelAdmin):
+class GalleryUploadAdmin(BatchModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False # To remove the 'Save and continue editing' button
 
