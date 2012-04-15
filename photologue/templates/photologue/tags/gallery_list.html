@@ -1,0 +1,13 @@
+{% load i18n %}
+{% load photologue_tags %}
+
+{% if object_list %}
+    {% for gallery in object_list %}
+    	<div class="pl-gallery">
+        	<h2><a href="{{ gallery.get_absolute_url }}">{{ gallery.title }}</a></h2>
+        	{% gallery_items gallery.sample sample_size %}
+    	</div>
+    {% endfor %}
+{% else %}
+    <p>{% trans "No galleries were found." %}</p>
+{% endif %}
