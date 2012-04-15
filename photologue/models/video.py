@@ -10,30 +10,15 @@ from media import *
 from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
 
-""" Use signals to add videos to ConvertVideo for batch processing """
-
-def set_original(sender, instance, **kwargs):
-    try:
-        instance.last_file = unicode(instance.file)
-    except KeyError:
-        instance.last_file = None
-
-def add_convert(sender, instance, created, **kwargs):
-    if instance.file != instance.last_file or created:
-        ctype = ContentType.objects.get_for_model(sender)
-        c = ConvertVideo.objects.create(content_type=ctype, object_id=instance.pk, converted=False, message='', videosize=None)
+VIDEO_TYPES = (
+    ('mp4', 'MPEG-4'),
+    ('ogv', 'Vorbis'),
+    ('flv', 'Flash'),
+    ('webm', 'WebM'),
+)
 
 class VideoModel(MediaModel):
     poster = models.OneToOneField(ImageModel, null=True)
-    mp4_video = models.FileField(_('mp4 video'), null=True, upload_to=get_storage_path)
-    ogv_video = models.FileField(_('ogv video'), null=True, upload_to=get_storage_path)
-    flv_video = models.FileField(_('flv video'), null=True, upload_to=get_storage_path)
-    webm_video= models.FileField(_('webm video'),null=True, upload_to=get_storage_path)
-
-    def __init__(self, *args, **kwargs):
-        super(VideoModel, self).__init__(*args, **kwargs)
-        post_init.connect(set_original, sender=self)
-        post_save.connect(add_convert, sender=self)
 
     def save(self, *args, **kwargs):
         if not self.poster:
@@ -44,6 +29,11 @@ class VideoModel(MediaModel):
         if self.poster:
             self.poster.delete()
         super(VideoModel, self).delete()
+
+    def admin_thumbnail(self):
+        return self.poster.admin_thumbnail(self.get_absolute_url())
+    admin_thumbnail.short_description = _('Thumbnail')
+    admin_thumbnail.allow_tags = True
 
     def get_absolute_url(self):
         return reverse('pl-video', args=[self.title_slug])
@@ -67,10 +57,20 @@ class VideoModel(MediaModel):
         override = self.get_override(videosize)
         video_model_obj = override if override else self
 
-        ctype = ContentType.objects.get_for_model(self)
-        c = ConvertVideo.objects.create(content_type=ctype, object_id=instance.pk, converted=False, message='', videosize=videosize)
+        #ctype = ContentType.objects.get_for_model(self)
+        #c = ConvertVideo.objects.create(content_type=ctype, object_id=instance.pk, converted=False, message='', videosize=videosize)
 
 class VideoSize(MediaSize):
+    videotype = models.CharField(_('type'), max_length=4, choices=VIDEO_TYPES, null=False, blank=False,
+                help_text=_('This is video format for this video size.'))
+    twopass = models.BooleanField(_('two pass?'), default=True, help_text=_('If selected, the conversion will be performed in two passes,\
+                    it is slower, but the result is generally better.'))
+    letterbox = models.BooleanField(_('letterbox'), default=True, help_text=_('If enabled and aspect ratio is not matching,\
+                    put the video in black box.'))
+    videobitrate = models.PositiveIntegerField(_('video bitrate (kbps)'), default=2000, help_text=_('Video bitrate in kilobits per second.'))
+    audiobitrate = models.PositiveIntegerField(_('audio bitrate'), default=32000, help_text=_('Audio bitrate in bits per second.\
+                    When set to 0, it will mute audio.'))
+
     def save(self, *args, **kwargs):
         if not self.pre_cache:
             self.pre_cache = True
@@ -111,4 +111,3 @@ class Video(VideoModel, GalleryItemBase):
             except:
                 pass
         super(Video, self).save(*args, **kwargs)
-#Video._meta.get_field('file').verbose_name = _('Video file')

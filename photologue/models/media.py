@@ -17,14 +17,16 @@ class MediaModel(models.Model):
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
 
-    def admin_thumbnail(self):
+    def admin_thumbnail(self, dest_url=None):
         func = getattr(self, 'get_admin_thumbnail_url', None)
         if func is None:
             return _('An "admin_thumbnail" size has not been defined.')
         else:
+            if not dest_url:
+                dest_url = self.get_absolute_url()
             if hasattr(self, 'get_absolute_url'):
                 return u'<a href="%s"><img src="%s"></a>' % \
-                    (self.get_absolute_url(), func())
+                    (dest_url, func())
             else:
                 return u'<a href="%s"><img src="%s"></a>' % \
                     (self.file.url, func()) if self.file else ''
@@ -171,7 +173,7 @@ class MediaSize(models.Model):
     upscale = models.BooleanField(_('upscale media?'), default=False, help_text=_('If selected the media will be scaled up if necessary to fit the supplied dimensions. Cropped sizes will be upscaled regardless of this setting.'))
     crop = models.BooleanField(_('crop to fit?'), default=False, help_text=_('If selected the media will be scaled and cropped to fit the supplied dimensions.'))
     pre_cache = models.BooleanField(_('pre-cache?'), default=False, help_text=_('If selected this media size will be pre-cached as media are added.'))
-    increment_count = models.BooleanField(_('increment view count?'), default=False, help_text=_('If selected the media\'s "view_count" will be incremented when this media size is displayed.'))
+    increment_count = models.BooleanField(_('increment view count?'), default=False, help_text=_('If selected the "view_count" will be incremented when this size is displayed.'))
 
     def __unicode__(self):
         return self.name

@@ -69,7 +69,7 @@ class VideoAdmin(BatchModelAdmin):
     search_fields = ['title', 'title_slug', 'caption']
     list_per_page = 10
     prepopulated_fields = {'title_slug': ('title',)}
-    exclude = ('poster', 'flv_video', 'mp4_video', 'ogv_video', 'webm_video', 'crop_from')
+    exclude = ('poster', 'crop_from')
 
     def the_tags(self, obj):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))
@@ -124,17 +124,17 @@ class ImageSizeAdmin(BatchModelAdmin):
 
 class VideoSizeAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
-    list_display = ('name', 'width', 'height', 'crop', 'increment_count')
+    list_display = ('name', 'videotype', 'width', 'height', 'videobitrate', 'audiobitrate', 'increment_count')
     fieldsets = (
         (None, {
-            'fields': ('name', 'width', 'height')
+            'fields': ('name', 'width', 'height', 'videotype')
         }),
         ('Options', {
-            'fields': ('upscale', 'crop', 'increment_count')
+            'fields': ('twopass', 'upscale', 'crop', 'letterbox', 'increment_count')
         }),
-        #('Enhancements', {
-        #    'fields': ('effect', 'watermark',)
-        #}),
+        ('Quality', {
+            'fields': ('videobitrate', 'audiobitrate',)
+        }),
     )
 
 class WatermarkAdmin(BatchModelAdmin):
