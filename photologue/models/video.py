@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 
 from photologue.default_settings import *
 from media import *
-from image import ImageModel
+from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
 
 """ Use signals to add videos to ConvertVideo for batch processing """
@@ -23,24 +23,17 @@ def add_convert(sender, instance, created, **kwargs):
         ctype = ContentType.objects.get_for_model(sender)
         c = ConvertVideo.objects.create(content_type=ctype, object_id=instance.pk, converted=False, message='', videosize=None)
 
-""" Register signals to any base of VideoModel using a metaclass """
-class VideoModelBase(ModelBase):
-
-    def __new__(cls, name, bases, attrs):
-        new = super(VideoModelBase, cls).__new__(cls, name, bases, attrs)
-        if not new._meta.abstract:
-            post_init.connect(set_original, sender=new)
-            post_save.connect(add_convert, sender=new)
-        return new
-
 class VideoModel(MediaModel):
-    __metaclass__ = VideoModelBase
-
     poster = models.OneToOneField(ImageModel, null=True)
     mp4_video = models.FileField(_('mp4 video'), null=True, upload_to=get_storage_path)
     ogv_video = models.FileField(_('ogv video'), null=True, upload_to=get_storage_path)
     flv_video = models.FileField(_('flv video'), null=True, upload_to=get_storage_path)
     webm_video= models.FileField(_('webm video'),null=True, upload_to=get_storage_path)
+
+    def __init__(self, *args, **kwargs):
+        super(VideoModel, self).__init__(*args, **kwargs)
+        post_init.connect(set_original, sender=self)
+        post_save.connect(add_convert, sender=self)
 
     def save(self, *args, **kwargs):
         if not self.poster:
@@ -55,10 +48,15 @@ class VideoModel(MediaModel):
     def get_absolute_url(self):
         return reverse('pl-video', args=[self.title_slug])
 
-    def create_size(self, videosize):
+    def create_size(self, mediasize):
         # Fail gracefully if we don't have an video.
-        if not self.original_video:
+        if not self.file:
             return
+
+        # Check if we got right size
+        if not hasattr(mediasize, 'videosize'):
+            return
+        videosize = mediasize.videosize
 
         if self.size_exists(videosize):
             return
@@ -73,7 +71,6 @@ class VideoModel(MediaModel):
         c = ConvertVideo.objects.create(content_type=ctype, object_id=instance.pk, converted=False, message='', videosize=videosize)
 
 class VideoSize(MediaSize):
-
     def save(self, *args, **kwargs):
         if not self.pre_cache:
             self.pre_cache = True
