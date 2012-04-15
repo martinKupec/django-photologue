@@ -77,15 +77,24 @@ class MediaModel(models.Model):
                             self._get_filename_for_size(mediasize.name)))
 
     def add_accessor_methods(self, *args, **kwargs):
-        for size in MediaSizeCache().sizes.keys():
-            setattr(self, 'get_%s_size' % size,
-                    curry(self._get_SIZE_size, size=size))
-            setattr(self, 'get_%s_mediasize' % size,
-                    curry(self._get_SIZE_mediasize, size=size))
-            setattr(self, 'get_%s_url' % size,
-                    curry(self._get_SIZE_url, size=size))
-            setattr(self, 'get_%s_filename' % size,
-                    curry(self._get_SIZE_filename, size=size))
+        for size in MediaSizeCache().sizes.values():
+            related_model = type(size).__name__.split('.')[-1].lower().replace('size', 'model')
+            ok = False
+            for anc in [x.__name__.lower() for x in type(self).mro()]:
+                if anc == related_model:
+                    ok = True
+            if not ok:
+                continue
+            #if not hasattr(self, related_model):
+            #    continue
+            setattr(self, 'get_%s_size' % size.name,
+                    curry(self._get_SIZE_size, size=size.name))
+            setattr(self, 'get_%s_mediasize' % size.name,
+                    curry(self._get_SIZE_mediasize, size=size.name))
+            setattr(self, 'get_%s_url' % size.name,
+                    curry(self._get_SIZE_url, size=size.name))
+            setattr(self, 'get_%s_filename' % size.name,
+                        curry(self._get_SIZE_filename, size=size.name))
 
     def _get_filename_for_size(self, size):
         size = getattr(size, 'name', size)
@@ -162,7 +171,7 @@ class MediaOverride(MediaModel):
     content_type = models.ForeignKey('contenttypes.ContentType')
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey("content_type", "object_id")
-    mediasize = models.ForeignKey('MediaSize')
+    mediasize = models.ForeignKey('MediaSize', blank=False)
 
 class MediaSize(models.Model):
     name = models.CharField(_('name'), max_length=64, unique=True, help_text=_('Size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
@@ -216,7 +225,16 @@ class MediaSizeCache(object):
         if not len(self.sizes):
             sizes = MediaSize.objects.all()
             for size in sizes:
-                self.sizes[size.name] = size
+                related = False
+                for subclass in size._meta.get_all_related_objects():
+                    name = subclass.get_accessor_name()
+                    if name.endswith('size') and hasattr(size, name):
+                        if not related:
+                            related = getattr(size, name)
+                if related:
+                    self.sizes[size.name] = related
+                else:
+                    self.sizes[size.name] = size
 
     def reset(self):
         self.sizes = {}

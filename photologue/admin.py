@@ -19,8 +19,22 @@ class GalleryAdmin(BatchModelAdmin):
     search_fields = ['items']
     filter_horizontal = ('items',)
 
+class PhotoOverrideInline(generic.GenericTabularInline):
+    model = MediaOverride
+    verbose_name = "photo override"
+    verbose_name_plural = "photo overrides"
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "mediasize":
+            print dir(db_field)
+            db_field.verbose_name = "ImageSize"
+            ids = ImageSize.objects.all()
+            kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
+        return super(PhotoOverrideInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
 class PhotoAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
+    inlines = [PhotoOverrideInline]
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
@@ -31,8 +45,28 @@ class PhotoAdmin(BatchModelAdmin):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))
     the_tags.short_description = 'Tags'
 
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        print db_field.name
+        if db_field.name == 'file':
+            db_field.verbose_name = 'Photo'
+        return super(PhotoAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+
+class VideoOverrideInline(generic.GenericTabularInline):
+    model = MediaOverride
+    verbose_name = "video override"
+    verbose_name_plural = "video overrides"
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "mediasize":
+            print dir(db_field)
+            db_field.verbose_name = "VideoSize"
+            ids = VideoSize.objects.all()
+            kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
+        return super(VideoOverrideInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
 class VideoAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
+    inlines = [VideoOverrideInline]
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
@@ -43,6 +77,12 @@ class VideoAdmin(BatchModelAdmin):
     def the_tags(self, obj):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))
     the_tags.short_description = 'Tags'
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        print db_field.name
+        if db_field.name == 'file':
+            db_field.verbose_name = 'Video'
+        return super(VideoAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
 class GalleryPermissionAdmin(BatchModelAdmin):
     list_display = ('gallery', 'can_access_gallery', 'can_see_normal_size', 'can_download_full_size', 'can_download_zip',)
@@ -109,9 +149,6 @@ class WatermarkAdmin(BatchModelAdmin):
 class GalleryUploadAdmin(BatchModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False # To remove the 'Save and continue editing' button
-
-class MediaOverrideInline(generic.GenericTabularInline):
-    model = MediaOverride
 
 admin.site.register(Gallery, GalleryAdmin)
 admin.site.register(GalleryUpload, GalleryUploadAdmin)
