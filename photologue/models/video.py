@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_init, post_save
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.utils.functional import curry
 
 from photologue.default_settings import *
 from media import *
@@ -35,8 +36,14 @@ class VideoModel(MediaModel):
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
 
-    def get_absolute_url(self):
-        return reverse('pl-video', args=[self.title_slug])
+    def add_accessor_methods(self, *args, **kwargs):
+        for size in MediaSizeCache().sizes.values():
+            if type(size) != ImageSize:
+                continue
+            for func in ['get_%s_size', 'get_%s_mediasize', 'get_%s_url', 'get_%s_filename']:
+                func = func % size.name
+                if not hasattr(self, func):
+                    setattr(self, func, curry(getattr(self.poster, func)))
 
     def create_size(self, mediasize):
         # Fail gracefully if we don't have an video.

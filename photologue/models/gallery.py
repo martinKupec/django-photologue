@@ -189,7 +189,24 @@ class GalleryUpload(models.Model):
             zip.close()
             return gallery
 
+class GalleryItemQuerySet(models.query.QuerySet):
+    def iterator(self):
+        iter = super(GalleryItemQuerySet, self).iterator()
+        for obj in iter:
+            subclass = False
+            for cls in GalleryItemBase.__subclasses__():
+                cls = cls.__name__.lower()
+                if hasattr(obj, cls):
+                    subclass = True
+                    yield getattr(obj, cls)
+                    break
+            if not subclass:
+                yield obj
+
 class GalleryItemManager(models.Manager):
+    def get_query_set(self):
+        return GalleryItemQuerySet(self.model)
+
     def latest(self, limit=LATEST_LIMIT, public=True):
         if public:
             item_set = self.public()
@@ -244,13 +261,15 @@ class GalleryItemBase(models.Model):
             self.title_slug = slugify(self.title)
         super(GalleryItemBase, self).save(*args, **kwargs)
 
+    def type(self):
+        for cls in GalleryItemBase.__subclasses__():
+            cls = cls.__name__.lower()
+            if hasattr(self, cls):
+                return cls
+        return type(self).__name__.lower()
+
     def get_absolute_url(self):
-        for subclass in self._meta.get_all_related_objects():
-            acc_name = subclass.get_accessor_name()
-            if not acc_name.endswith('_set') and hasattr(self, acc_name):
-                return getattr(self, acc_name).get_absolute_url()
-        # Fallback
-        return ""
+        return reverse('pl-'+self.type(), args=[self.title_slug])
 
     def public_galleries(self):
         """Return the public galleries to which this item belongs."""

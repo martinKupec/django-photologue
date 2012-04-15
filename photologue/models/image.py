@@ -53,9 +53,6 @@ class ImageModel(MediaModel):
             except:
                 return {}
 
-    def get_absolute_url(self):
-        return reverse('pl-photo', args=[self.title_slug])
-
     def create_size(self, mediasize):
         # Fail gracefully if we don't have an image.
         if not self.file:
