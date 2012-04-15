@@ -10,7 +10,7 @@ LATEST_LIMIT = getattr(settings, 'PHOTOLOGUE_GALLERY_LATEST_LIMIT', None)
 MEDIA_FIELD_MAX_LENGTH = getattr(settings, 'PHOTOLOGUE_MEDIA_FIELD_MAX_LENGTH', 100)
 
 # Path to sample image
-SAMPLE_IMAGE_PATH = getattr(settings, 'SAMPLE_IMAGE_PATH', os.path.join(os.path.dirname(__file__), 'res', 'sample.jpg'))
+SAMPLE_IMAGE_PATH = getattr(settings, 'SAMPLE_IMAGE_PATH', os.path.join('res', 'sample.jpg'))
 
 # Modify image file buffer size.
 MAXBLOCK = getattr(settings, 'PHOTOLOGUE_MAXBLOCK', 256 * 2 ** 10)
@@ -33,7 +33,7 @@ else:
         return os.path.join(PHOTOLOGUE_DIR, 'photos', filename)
 
 # Path to default video poster
-DEFAULT_POSTER_PATH = getattr(settings, 'DEFAULT_POSTER_PATH', os.path.join(os.path.dirname(__file__), 'res', 'default.jpg'))
+DEFAULT_POSTER_PATH = getattr(settings, 'DEFAULT_POSTER_PATH', os.path.join('res', 'sample.jpg'))
 
 # Quality options for JPEG images
 JPEG_QUALITY_CHOICES = (
