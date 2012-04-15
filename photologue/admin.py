@@ -26,7 +26,6 @@ class PhotoOverrideInline(generic.GenericTabularInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "mediasize":
-            print dir(db_field)
             db_field.verbose_name = "ImageSize"
             ids = ImageSize.objects.all()
             kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
@@ -46,7 +45,6 @@ class PhotoAdmin(BatchModelAdmin):
     the_tags.short_description = 'Tags'
 
     def formfield_for_dbfield(self, db_field, **kwargs):
-        print db_field.name
         if db_field.name == 'file':
             db_field.verbose_name = 'Photo'
         return super(PhotoAdmin, self).formfield_for_dbfield(db_field, **kwargs)
@@ -58,7 +56,6 @@ class VideoOverrideInline(generic.GenericTabularInline):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "mediasize":
-            print dir(db_field)
             db_field.verbose_name = "VideoSize"
             ids = VideoSize.objects.all()
             kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
@@ -79,7 +76,6 @@ class VideoAdmin(BatchModelAdmin):
     the_tags.short_description = 'Tags'
 
     def formfield_for_dbfield(self, db_field, **kwargs):
-        print db_field.name
         if db_field.name == 'file':
             db_field.verbose_name = 'Video'
         return super(VideoAdmin, self).formfield_for_dbfield(db_field, **kwargs)

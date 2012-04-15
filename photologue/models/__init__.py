@@ -15,7 +15,7 @@ from django.db.models.signals import post_init
 def add_methods(sender, instance, signal, *args, **kwargs):
     """ Adds methods to access sized images (urls, paths)
 
-    after the Photo model's __init__ function completes,
+    after the model's __init__ function completes,
     this method calls "add_accessor_methods" on each instance.
     """
     if hasattr(instance, 'add_accessor_methods'):

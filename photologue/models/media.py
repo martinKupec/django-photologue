@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
@@ -29,16 +30,6 @@ class MediaModel(models.Model):
                     (self.file.url, func()) if self.file else ''
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
-
-    #def __unicode__(self):
-    #    for subclass in self._meta.get_all_related_objects():
-    #        acc_name = subclass.get_accessor_name()
-    #        if not acc_name.endswith('_set') and hasattr(self, acc_name):
-    #            return getattr(self, acc_name).__unicode__()
-    #    return super(MediaModel, self).__unicode__()
-
-    #def __str__(self):
-    #    return super(MediaModel, self).__str__()
 
     def cache_path(self):
         try:
@@ -174,7 +165,7 @@ class MediaOverride(MediaModel):
     mediasize = models.ForeignKey('MediaSize', blank=False)
 
 class MediaSize(models.Model):
-    name = models.CharField(_('name'), max_length=64, unique=True, help_text=_('Size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
+    name = models.CharField(_('name'), max_length=64, unique=False, help_text=_('Size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
     width = models.PositiveIntegerField(_('width'), default=0, help_text=_('If width is set to "0" the media will be scaled to the supplied height.'))
     height = models.PositiveIntegerField(_('height'), default=0, help_text=_('If height is set to "0" the media will be scaled to the supplied width'))
     upscale = models.BooleanField(_('upscale media?'), default=False, help_text=_('If selected the media will be scaled up if necessary to fit the supplied dimensions. Cropped sizes will be upscaled regardless of this setting.'))
@@ -187,6 +178,28 @@ class MediaSize(models.Model):
 
     def __str__(self):
         return self.__unicode__()
+
+    def validate_unique(self, exclude=None):
+        # Check as usual
+        try:
+            super(MediaSize, self).validate_unique(exclude)
+            # No erros
+            errors = {}
+        except ValidationError, errors:
+            # Save the error in errors
+            pass
+        # Check for unique name
+        qs = type(self).objects.filter(name = self.name)
+        # Exclude the current object from the query if we are editing an
+        # instance (as opposed to creating a new one)
+        if not self._state.adding and self.pk is not None:
+            qs = qs.exclude(pk=self.pk)
+        # Is anything here?
+        if qs.exists():
+            errors.setdefault('name', []).append(self.unique_error_message(type(self), ['name']))
+        # Raise errors as usual
+        if errors:
+            raise ValidationError(errors)
 
     def clear_cache(self):
         for cls in MediaModel.__subclasses__():
