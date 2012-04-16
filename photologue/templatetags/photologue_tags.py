@@ -1,8 +1,13 @@
+from django.core.urlresolvers import reverse
 from django import template
 
-from photologue.models import Photo
+from photologue.models import Photo, Video
 
 register = template.Library()
+
+@register.simple_tag
+def media_url(urlname, media_type, num, *args, **kwargs):
+	return reverse(urlname.replace('TYPE', media_type), args=[num])
 
 @register.inclusion_tag('photologue/tags/gallery_list.html')
 def list_galleries(galleries, sample_size=None):
@@ -10,6 +15,11 @@ def list_galleries(galleries, sample_size=None):
     return {'object_list': galleries, 'sample_size': sample_size}
 
 @register.inclusion_tag('photologue/tags/gallery_item.html')
+def gallery_item(item):
+    """ Return a specified item """
+    return {'item': item}
+
+@register.inclusion_tag('photologue/tags/gallery_items.html')
 def gallery_items(items, restrict=None):
     """ Return a specified items """
     if restrict:

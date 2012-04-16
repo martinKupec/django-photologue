@@ -1,9 +1,5 @@
-<div class="pl-gallery-items">
-    {% for item in object_list %}
-    <div class="pl-gallery-item">
-        <div class="pl-gallery-{{ item.type }}">
-            <a href="{{ item.get_absolute_url }}"><img src="{{ item.get_thumbnail_url }}" alt="{{ item.title }}"/></a>
-        </div>
+<div class="pl-gallery-item">
+	<div class="pl-gallery-{{ item.type }}">
+		<a href="{{ item.get_absolute_url }}"><img src="{{ item.get_thumbnail_url }}" alt="{{ item.title }}"/></a>
     </div>
-    {% endfor %}
 </div>

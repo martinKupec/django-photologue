@@ -1,0 +1,18 @@
+{% extends "photologue/root.html" %}
+
+{% load i18n %}
+{% load photologue_tags %}
+
+{% block title %}{% trans "All" %} {{ media_name_plural }}{% endblock %}
+
+{% block content %}
+
+<h1>{% trans "All" %} {{ media_name_plural }}</h1>
+
+{% if object_list %}
+	{% gallery_items object_list %}
+{% else %}
+	<p>{% trans "No" %} {{ media_name_plural }} {% trans "were found." %}</p>
+{% endif %}
+
+{% endblock %}

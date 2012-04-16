@@ -1,0 +1,8 @@
+{% load i18n %}
+{% load photologue_tags %}
+
+<div class="pl-gallery-items">
+    {% for item in object_list %}
+		{% gallery_item item %}
+    {% endfor %}
+</div>

@@ -1,0 +1,20 @@
+{% extends "photologue/root.html" %}
+
+{% load i18n %}
+{% load photologue_tags %}
+
+{% block title %}{% trans "Latest" %} {{ media_name_plural }}{% endblock %}
+
+{% block content %}
+
+<h1>{% trans "Latest" %} {{ media_name_plural }}</h1>
+
+{% if latest %}
+    {% gallery_items latest %}
+{% else %}
+    <p>{% trans "No" %} {{ media_name_plural }} {% trans "were found." %}</p>
+{% endif %}
+
+<p><a href="{% media_url 'pl-TYPE-list' media_type 1 %}">{% trans "View all" %} {{ media_name_plural|lower }}.</a></p>
+
+{% endblock %}
