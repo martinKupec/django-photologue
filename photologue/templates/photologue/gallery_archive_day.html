@@ -9,7 +9,7 @@
 
 <h1>{% trans "Galleries for" %} {{ day|date }}</h1>
 
-{% list_galleries object_list sample_size %}
+{% include "photologue/gallery_listing.html" with galleries=object_list %}
 
 <p><a href="{% url pl-gallery-list 1 %}">{% trans "View all galleries." %}</a></p>
 

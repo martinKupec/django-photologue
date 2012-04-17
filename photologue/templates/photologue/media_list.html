@@ -10,7 +10,7 @@
 <h1>{% trans "All" %} {{ media_name_plural }}</h1>
 
 {% if object_list %}
-	{% gallery_items object_list %}
+	{% include "photologue/gallery_items.html" with items=object_list %}
 {% else %}
 	<p>{% trans "No" %} {{ media_name_plural }} {% trans "were found." %}</p>
 {% endif %}

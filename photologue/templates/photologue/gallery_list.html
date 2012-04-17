@@ -9,6 +9,6 @@
 
 <h1>{% trans "All galleries" %}</h1>
 
-{% list_galleries object_list sample_size %}
+{% include "photologue/gallery_listing.html" with galleries=object_list %}
 
 {% endblock %}

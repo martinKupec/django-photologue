@@ -10,7 +10,7 @@
 <h1>{% trans "Latest" %} {{ media_name_plural }}</h1>
 
 {% if latest %}
-    {% gallery_items latest %}
+	{% include "photologue/gallery_items.html" with items=latest %}
 {% else %}
     <p>{% trans "No" %} {{ media_name_plural }} {% trans "were found." %}</p>
 {% endif %}

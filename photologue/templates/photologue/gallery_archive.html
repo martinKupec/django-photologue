@@ -9,7 +9,7 @@
 
 <h1>{% trans "Latest Photo Galleries" %}</h1>
 
-{% list_galleries latest sample_size %}
+{% include "photologue/gallery_listing.html" with galleries=latest %}
 
 <p><a href="{% url pl-gallery-list 1 %}">{% trans "View all galleries." %}</a></p>
 

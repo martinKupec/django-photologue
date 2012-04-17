@@ -1,0 +1,12 @@
+{% load i18n %}
+
+{% if galleries %}
+    {% for gallery in galleries %}
+    	<div class="pl-gallery">
+        	<h2><a href="{{ gallery.get_absolute_url }}">{{ gallery.title }}</a></h2>
+        	{% include "photologue/gallery_items.html" with items=gallery.sample|slice:sample_size %}
+    	</div>
+    {% endfor %}
+{% else %}
+	<p>{% trans "No galleries were found." %}</p>
+{% endif %}

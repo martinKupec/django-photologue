@@ -1,7 +1,6 @@
 {% extends "photologue/root.html" %}
 
 {% load i18n %}
-{% load photologue_tags %}
 
 {% block title %}{{ object.title }}{% endblock %}
 
@@ -11,7 +10,7 @@
 <h2>{% trans "Originally published" %} {{ object.date_added|date:"l, F jS, Y" }}</h2>
 {% if object.description %}<p>{{ object.description }}</p>{% endif %}
 <div class="pl-gallery">
-    {% gallery_items object.public %}
+    {% include "photologue/gallery_items.html" with items=object.public %}
 </div>
 <p><a href="{% url pl-gallery-list 1 %}">{% trans "View all galleries" %}</a></p>
 
