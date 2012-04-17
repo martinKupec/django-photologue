@@ -3,7 +3,6 @@ from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_init, post_save
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.utils.functional import curry
 
 from photologue.default_settings import *
@@ -37,6 +36,8 @@ class VideoModel(MediaModel):
     admin_thumbnail.allow_tags = True
 
     def add_accessor_methods(self, *args, **kwargs):
+        if not self.poster:
+            return
         for size in MediaSizeCache().sizes.values():
             if type(size) != ImageSize:
                 continue
