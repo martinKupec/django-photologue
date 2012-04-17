@@ -6,8 +6,8 @@ from photologue.models import Photo, Video
 register = template.Library()
 
 @register.simple_tag
-def media_url(urlname, media_type, num, *args, **kwargs):
-    return reverse(urlname.replace('TYPE', media_type), args=[num])
+def media_url(urlname, media_type, *args, **kwargs):
+    return reverse(urlname.replace('TYPE', media_type), args=args)
 
 @register.inclusion_tag('photologue/gallery_item.html')
 def next_in_gallery(item, gallery):

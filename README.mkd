@@ -10,6 +10,12 @@ Installation
 
 Code is available from: https://github.com/martinKupec/django-photologue
 
+To make this application work, a 3 line patch to django has to be made
+This application uses models splitted across several files.
+The patch is included and can be applied similar to:
+
+	(cd /usr/lib/python2.7/site-packages/django/; sudo patch -p1 ) < separate_models.9107.diff
+
 
 Source Distribution
 -------------------
