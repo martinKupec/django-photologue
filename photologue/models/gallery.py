@@ -277,14 +277,15 @@ class GalleryItemBase(models.Model):
 
     def get_previous_in_gallery(self, gallery):
         try:
-            return self.get_previous_by_date_added(galleries__exact=gallery,
-                                                   is_public=True)
+
+            return self.galleryitembase_ptr.get_previous_by_date_added(
+                        galleries__exact=gallery, is_public=True)
         except GalleryItemBase.DoesNotExist:
             return None
 
     def get_next_in_gallery(self, gallery):
         try:
-            return self.get_next_by_date_added(galleries__exact=gallery,
-                                               is_public=True)
+            return self.galleryitembase_ptr.get_next_by_date_added(
+                        galleries__exact=gallery, is_public=True)
         except GalleryItemBase.DoesNotExist:
             return None

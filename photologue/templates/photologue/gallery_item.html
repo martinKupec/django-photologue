@@ -1,5 +1,11 @@
+{% if item %}
+{% if not nodiv %}
 <div class="pl-gallery-item">
 	<div class="pl-gallery-{{ item.type }}">
+{% endif %}
 		<a href="{{ item.get_absolute_url }}"><img src="{{ item.get_thumbnail_url }}" alt="{{ item.title }}"/></a>
+{% if not nodiv %}
     </div>
 </div>
+{% endif %}
+{% endif %}
