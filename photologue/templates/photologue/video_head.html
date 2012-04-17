@@ -1,0 +1,8 @@
+<link href="{{ STATIC_URL }}video-js/video-js.min.css" rel="stylesheet" type="text/css">
+{#<link href="http://vjs.zencdn.net/c/video-js.css" rel="stylesheet">#}
+<!-- video.js must be in the <head> for older IEs to work. -->
+<script src="{{ STATIC_URL }}video-js/video.min.js"></script>
+{#<script src="http://vjs.zencdn.net/c/video.js"></script>#}
+<script>
+    _V_.options.flash.swf = "{{STATIC_URL}}video-js/video-js.swf"
+</script>

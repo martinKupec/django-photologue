@@ -53,6 +53,13 @@ class ImageModel(MediaModel):
             except:
                 return {}
 
+    def _get_SIZE_size(self, size):
+        mediasize = MediaSizeCache().sizes.get(size)
+        if not self.size_exists(mediasize):
+            self.create_size(mediasize)
+        sizes = Image.open(self._get_SIZE_filename(size)).size
+        return {'width': sizes[0], 'height': sizes[1]}
+
     def create_size(self, mediasize):
         # Fail gracefully if we don't have an image.
         if not self.file:

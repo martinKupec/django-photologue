@@ -1,11 +1,13 @@
+import os
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_init, post_save
-from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import now
 from django.utils.functional import curry
 
 from photologue.default_settings import *
+from photologue.utils.video import video_sizes
 from media import *
 from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
@@ -21,6 +23,15 @@ class VideoModel(MediaModel):
     poster = models.OneToOneField(ImageModel, null=True)
 
     def save(self, *args, **kwargs):
+        try:
+            orig = VideoModel.objects.get(pk=self.pk)
+            if orig.file == self.file:
+                self.prevent_cache_clear = True
+            else:
+                self.prevent_cache_clear = False
+                self.view_count = 0
+        except VideoModel.DoesNotExist:
+            pass
         if not self.poster:
             self.poster = ImageModel.objects.create(file=DEFAULT_POSTER_PATH)
         super(VideoModel, self).save(*args, **kwargs)
@@ -30,12 +41,38 @@ class VideoModel(MediaModel):
             self.poster.delete()
         super(VideoModel, self).delete()
 
+    def __unicode__(self):
+        return unicode(os.path.split(self.file.path)[1])
+
     def admin_thumbnail(self):
         return self.poster.admin_thumbnail(self.get_absolute_url())
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
 
+    def _get_SIZE_size(self, size):
+        mediasize = MediaSizeCache().sizes.get(size)
+        if not self.size_exists(mediasize):
+            self.create_size(mediasize)
+        try:
+            width, height, aspect = video_sizes(self._get_SIZE_filename(size))
+        except:
+            return
+        return {'width': width, 'height': height}
+
+    def _get_filename_for_size(self, size):
+        if hasattr(size, 'name'):
+            # size is class
+            size_name = size.name
+            mediasize = size
+        else:
+            # size is name
+            size_name = size
+            mediasize = self._get_SIZE_mediasize(size)
+        base, ext = os.path.splitext(self.media_filename())
+        return ''.join([base, '_', size_name, '.', mediasize.videotype])
+
     def add_accessor_methods(self, *args, **kwargs):
+        super(VideoModel, self).add_accessor_methods(*args, **kwargs)
         if not self.poster:
             return
         for size in MediaSizeCache().sizes.values():
@@ -65,8 +102,13 @@ class VideoModel(MediaModel):
         override = self.get_override(videosize)
         video_model_obj = override if override else self
 
-        #ctype = ContentType.objects.get_for_model(self)
-        #c = ConvertVideo.objects.create(content_type=ctype, object_id=instance.pk, converted=False, message='', videosize=videosize)
+        if not VideoConvert.objects.filter(video=self, videosize=videosize).exists():
+            c = VideoConvert.objects.create(video=self, videosize=videosize, converted=False, message='')
+
+    def remove_size(self, videosize, *args, **kwargs):
+        c = VideoConvert.objects.filter(video=self, videosize=videosize)
+        c.delete()
+        super(VideoModel, self).remove_size(videosize, *args, **kwargs)
 
 class VideoSize(MediaSize):
     videotype = models.CharField(_('type'), max_length=4, choices=VIDEO_TYPES, null=False, blank=False,
@@ -89,16 +131,20 @@ class VideoSize(MediaSize):
         verbose_name = _('video size')
         verbose_name_plural = _('video sizes')
 
-class ConvertVideo(models.Model):
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    video = generic.GenericForeignKey('content_type', 'object_id')
-    message = models.TextField(null=True, blank=True)
-    converted = models.BooleanField()
-    videosize = models.ForeignKey(VideoSize, null=True, blank=True)
+class VideoConvert(models.Model):
+    video = models.ForeignKey(VideoModel, help_text=_('video to convert'), blank=False, null=False)
+    videosize = models.ForeignKey(VideoSize, help_text=_('video size to use'), null=False, blank=False)
+    access_date = models.DateTimeField(_('access date'), default=now, help_text=_('This date changes on each access to this object'))
+    inprogress = models.BooleanField(_('in progress'))
+    converted = models.BooleanField(_('converted'))
+    message = models.TextField(_('message'), null=True, blank=True)
 
     def __unicode__(self):
         return unicode(self.video)
+
+    def save(self, *args, **kwargs):
+        self.access_date = now()
+        super(VideoConvert, self).save(*args, **kwargs)
 
 class Video(VideoModel, GalleryItemBase):
     class Meta:

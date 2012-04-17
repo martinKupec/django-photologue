@@ -1,9 +1,9 @@
-from datetime import datetime
 from os import path
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import now
 from django.core.urlresolvers import reverse
 
 from photologue.default_settings import *
@@ -13,7 +13,7 @@ from media import MediaModel
 
 
 class Gallery(models.Model):
-    date_added = models.DateTimeField(_('date published'), default=datetime.now)
+    date_added = models.DateTimeField(_('date published'), default=now)
     title = models.CharField(_('title'), max_length=100, unique=True)
     title_slug = models.SlugField(_('title slug'), unique=True,
                                   help_text=_('A "slug" is a unique URL-friendly title for an object.'))
@@ -239,7 +239,7 @@ class GalleryItemBase(models.Model):
     title_slug = models.SlugField(_('slug'), unique=True,
                                   help_text=('A "slug" is a unique URL-friendly title for an object.'))
     caption = models.TextField(_('caption'), blank=True)
-    date_added = models.DateTimeField(_('date added'), default=datetime.now, editable=False)
+    date_added = models.DateTimeField(_('date added'), default=now, editable=False)
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Public photographs will be displayed in the default views.'))
     is_thumbnail = models.BooleanField(_('Is the main thumbnail for the gallery'), default=False, help_text=_('This image will show up as the thumbnail for the gallery.'))
 

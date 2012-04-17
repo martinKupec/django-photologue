@@ -1,11 +1,10 @@
-from datetime import datetime
-
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.utils.functional import curry
+from django.utils.timezone import now
 from django.utils.encoding import smart_str, force_unicode
 
 from photologue.default_settings import *
@@ -48,12 +47,6 @@ class MediaModel(models.Model):
     def _get_SIZE_mediasize(self, size):
         return MediaSizeCache().sizes.get(size)
 
-    def _get_SIZE_size(self, size):
-        mediasize = MediaSizeCache().sizes.get(size)
-        if not self.size_exists(mediasize):
-            self.create_size(mediasize)
-        return Image.open(self._get_SIZE_filename(size)).size
-
     def _get_SIZE_url(self, size):
         mediasize = MediaSizeCache().sizes.get(size)
         if not self.size_exists(mediasize):
@@ -61,6 +54,8 @@ class MediaModel(models.Model):
         if mediasize.increment_count:
             self.increment_count()
         if not self.file: 
+            return
+        if not os.path.isfile(self._get_SIZE_filename(size)):
             return
         return '/'.join([self.cache_url(), self._get_filename_for_size(mediasize.name)])
 
@@ -129,6 +124,11 @@ class MediaModel(models.Model):
             self.remove_cache_dirs()
 
     def clear_cache(self):
+        try:
+            if self.prevent_cache_clear:
+                return
+        except:
+            pass
         cache = MediaSizeCache()
         for mediasize in cache.sizes.values():
             self.remove_size(mediasize, False)
@@ -148,7 +148,7 @@ class MediaModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.date_taken is None:
-            self.date_taken = datetime.now()
+            self.date_taken = now()
         if self._get_pk_val():
             self.clear_cache()
         super(MediaModel, self).save(*args, **kwargs)
