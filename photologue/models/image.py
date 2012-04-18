@@ -2,6 +2,7 @@ from inspect import isclass
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import make_aware, get_current_timezone
 from django.core.urlresolvers import reverse
 
 from photologue.default_settings import *
@@ -52,6 +53,21 @@ class ImageModel(MediaModel):
                 return EXIF.process_file(open(self.file.path, 'rb'), details=False)
             except:
                 return {}
+
+    def save(self, *args, **kwargs):
+        if self.date_taken is None:
+            try:
+                exif_date = self.EXIF.get('EXIF DateTimeOriginal', None)
+                if exif_date is not None:
+                    d, t = str.split(exif_date.values)
+                    year, month, day = d.split(':')
+                    hour, minute, second = t.split(':')
+                    taken = datetime(int(year), int(month), int(day),
+                                               int(hour), int(minute), int(second))
+                    self.date_taken = make_aware(taken, get_current_timezone())
+            except:
+                pass
+        super(ImageModel, self).save(*args, **kwargs)
 
     def _get_SIZE_size(self, size):
         mediasize = MediaSizeCache().sizes.get(size)

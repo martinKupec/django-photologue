@@ -1,15 +1,27 @@
 from os import path
+import zipfile
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 from django.core.urlresolvers import reverse
+from django.core.files.base import ContentFile
+from django.template.defaultfilters import slugify
 
 from photologue.default_settings import *
 from taggit.managers import TaggableManager
+from taggit.utils import parse_tags
 
 from media import MediaModel
+
+try:
+    import Image
+except ImportError:
+    try:
+        from PIL import Image
+    except ImportError:
+        raise ImportError("The Python Imaging Library was not found.")
 
 
 class Gallery(models.Model):
@@ -92,11 +104,11 @@ class GalleryUpload(models.Model):
     zip_file = models.FileField(_('media file zip'), upload_to=path.join(PHOTOLOGUE_DIR, "zip-uploads"),
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
-    title = models.CharField(_('title'), max_length=75, help_text=_('All items in the gallery will be given a title made up of the gallery title + a sequential number.'))
+    title = models.CharField(_('title'), max_length=75, help_text=_('Title of the new gallery.'))
     caption = models.TextField(_('caption'), blank=True, help_text=_('Caption will be added to all items.'))
     description = models.TextField(_('description'), blank=True, help_text=_('A description of this Gallery.'))
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Uncheck this to make the uploaded gallery and included media private.'))
-    tags = TaggableManager(blank=True)
+    tags = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         verbose_name = _('gallery upload')
@@ -104,10 +116,11 @@ class GalleryUpload(models.Model):
 
     def save(self, *args, **kwargs):
         super(GalleryUpload, self).save(*args, **kwargs)
-        gallery = self.process_zipfile()
-        #FIXME - next line added from video
+        try:
+            self.process_zipfile()
+        except Exception, e:
+            pass
         super(GalleryUpload, self).delete()
-        return gallery
 
     def process_zipfile(self):
         if path.isfile(self.zip_file.path):
@@ -119,22 +132,25 @@ class GalleryUpload(models.Model):
             if bad_file:
                 raise Exception('"%s" in the .zip archive is corrupt.' % bad_file)
 
-            count = 1
+            parsed_tags = parse_tags(self.tags)
             if self.gallery:
                 gallery = self.gallery
             else:
                 gallery = Gallery.objects.create(title=self.title,
                                                  title_slug=slugify(self.title),
                                                  description=self.description,
-                                                 is_public=self.is_public,
-                                                 tags=self.tags)
+                                                 is_public=self.is_public)
+                gallery.save()
+                gallery.tags.add(*parsed_tags)
             from cStringIO import StringIO
+            from photo import Photo
+            from video import Video
             for filename in sorted(zip.namelist()):
                 if filename.startswith('__'): # do not process meta files
                     continue
                 data = zip.read(filename)
                 if len(data):
-                    good = False
+                    filetype = False
                     # Is it an image?
                     try:
                         # the following is taken from django.newforms.fields.ImageField:
@@ -147,47 +163,58 @@ class GalleryUpload(models.Model):
                         trial_image = Image.open(StringIO(data))
                         trial_image.verify()
                         # Ok, It is an image
-                        good = True
-                    except Exception:
+                        filetype = 'image'
+                    except Exception, e:
                         # if a "bad" file is found we just leave it.
                         pass
                     # Is it a video?
-                    if not good:
+                    if not filetype:
                         try:
-                            #FIXME need test for video file
+                            from django.core.files.temp import NamedTemporaryFile
+                            from photologue.utils.video import video_sizes
 
-                            # Ok, It is an image
-                            good = True
+                            tmp = NamedTemporaryFile()
+                            tmp.write(data)
+                            # Try to open this file as video and get sizes
+                            sizes = video_sizes(tmp.name)
+                            # Ok, it is a video
+                            filetype = 'video'
                         except Exception:
                             # if a "bad" file is found we just leave it.
                             pass
-                    if not good: 
+                    if not filetype: 
                         continue
+                    count = 0
+                    name = os.path.basename(filename)
+                    namebase, ext = os.path.splitext(name)
                     while 1:
-                        title = ' '.join([self.title, str(count)])
+                        if count:
+                            title = ''.join([namebase, '_'+str(count), ext])
+                        else:
+                            title = name
                         slug = slugify(title)
                         try:
-                            p = Media.objects.get(title_slug=slug)
-                        except Media.DoesNotExist:
-                            item = Media(title=title,
+                            p = GalleryItemBase.objects.get(title_slug=slug)
+                        except GalleryItemBase.DoesNotExist:
+                            if filetype == 'image':
+                                item = Photo(title=title,
                                           title_slug=slug,
                                           caption=self.caption,
-                                          is_public=self.is_public,
-                                          tags=self.tags)
-                            item.path.save(filename, ContentFile(data))
-                            #FIXME next line is not checked
-                            GalleryPhoto.objects.create(gallery=gallery, photo=photo)
-#                            gallery.photos.add(photo)
-                            #FROM VIDEOLOGUE
-                            video.original_video.save(filename, ContentFile(data), save=False)
-                            video.save()
-                            gallery.videos.add(video)
-                            #END FROM VIDEOLOGUE
-                            count = count + 1
+                                          is_public=self.is_public)
+                            elif filetype == 'video':
+                                item = Video(title=title,
+                                          title_slug=slug,
+                                          caption=self.caption,
+                                          is_public=self.is_public)
+                            else:
+                                raise Exception("Unknown file type")
+                            item.file.save(title, ContentFile(data), save=False)
+                            item.save()
+                            item.tags.add(*parsed_tags)
+                            gallery.items.add(item)
                             break
                         count = count + 1
             zip.close()
-            return gallery
 
 class GalleryItemQuerySet(models.query.QuerySet):
     def iterator(self):

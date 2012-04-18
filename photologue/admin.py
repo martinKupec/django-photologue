@@ -176,6 +176,7 @@ class WatermarkAdmin(BatchModelAdmin):
 
 
 class GalleryUploadAdmin(BatchModelAdmin):
+    prepopulated_fields = {'title': ('gallery',)}
     def has_change_permission(self, request, obj=None):
         return False # To remove the 'Save and continue editing' button
 
