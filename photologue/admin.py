@@ -3,6 +3,7 @@
 """
 import os
 from datetime import timedelta
+from django import forms
 from django.contrib import admin
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
@@ -175,8 +176,18 @@ class WatermarkAdmin(BatchModelAdmin):
     list_display = ('name', 'opacity', 'style')
 
 
+class GalleryUploadAdminForm(forms.ModelForm):
+    class Meta:
+        model = GalleryUpload
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        gallery = self.cleaned_data['gallery']
+        if not title and not gallery:
+            raise forms.ValidationError(_("Eighter gallery or title has to be filled."))
+        return self.cleaned_data["title"]
+
 class GalleryUploadAdmin(BatchModelAdmin):
-    prepopulated_fields = {'title': ('gallery',)}
+    form = GalleryUploadAdminForm
     def has_change_permission(self, request, obj=None):
         return False # To remove the 'Save and continue editing' button
 

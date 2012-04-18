@@ -104,7 +104,7 @@ class GalleryUpload(models.Model):
     zip_file = models.FileField(_('media file zip'), upload_to=path.join(PHOTOLOGUE_DIR, "zip-uploads"),
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
-    title = models.CharField(_('title'), max_length=75, help_text=_('Title of the new gallery.'))
+    title = models.CharField(_('title'), max_length=75, help_text=_('Title of the new gallery.'), blank=True, null=True)
     caption = models.TextField(_('caption'), blank=True, help_text=_('Caption will be added to all items.'))
     description = models.TextField(_('description'), blank=True, help_text=_('A description of this Gallery.'))
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Uncheck this to make the uploaded gallery and included media private.'))
