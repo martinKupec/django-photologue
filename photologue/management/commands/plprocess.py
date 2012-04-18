@@ -1,8 +1,10 @@
 import os
+from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from photologue.models import VideoConvert
+from photologue.models import VideoConvert, poster_unconverted
 from photologue.utils.video import *
+from photologue.default_settings import *
 
 class Command(BaseCommand):
 
@@ -69,7 +71,8 @@ def process_files():
 
         # Create poster
         try:
-            convert.message = video_create_poster(filepath, convert.video.poster, video_data)
+            if convert.video.poster and poster_unconverted(convert.video.poster):
+                convert.message = video_create_poster(filepath, convert.video.poster, video_data)
         except Exception, e:
             print e
             convert.inprogress = False
@@ -78,15 +81,25 @@ def process_files():
             continue
 
         func = 'convertvideo_%s' % convert.videosize.videotype
+        start = datetime.now()
         try:
-            out = convert.video._get_SIZE_filename(convert.videosize.name)
-            convert.message = globals()[func](filepath, out, convert.videosize, video_data)
+            out = convert.video._get_SIZE_filename(convert.videosize.name, invalid_ok=True)
+            try:
+                os.remove(out)
+            except:
+                pass
+            convert.message += globals()[func](filepath, out, convert.videosize, video_data)
         except Exception, e:
+            try:
+                os.remove(out)
+            except:
+                pass
             print e
             convert.inprogress = False
             convert.message = e
             convert.save()
             continue
+        convert.time = (datetime.now() - start).total_seconds()
         convert.inprogress = False
         convert.converted = True
         convert.save()

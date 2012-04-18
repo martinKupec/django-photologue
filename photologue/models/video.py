@@ -13,11 +13,18 @@ from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
 
 VIDEO_TYPES = (
-    ('mp4', 'MPEG-4'),
-    ('ogv', 'Vorbis'),
-    ('flv', 'Flash'),
-    ('webm', 'WebM'),
+    ('mp4', 'MPEG-4', 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'),
+    ('ogv', 'Vorbis', 'video/ogg; codecs="theora, vorbis"'),
+    ('flv', 'Flash', 'video/flv'),
+    ('webm', 'WebM', 'video/webm; codecs="vp8, vorbis"'),
 )
+
+def poster_unconverted(poster):
+    #FIXME move to STATIC - need to fix cache system
+    unconverted = os.path.join(settings.MEDIA_ROOT, DEFAULT_POSTER_PATH)
+    if poster.file.path != unconverted:
+        return False
+    return True
 
 class VideoModel(MediaModel):
     poster = models.OneToOneField(ImageModel, null=True)
@@ -28,6 +35,9 @@ class VideoModel(MediaModel):
             if orig.file == self.file:
                 self.prevent_cache_clear = True
             else:
+                if self.poster and not poster_unconverted(self.poster):
+                    self.poster.delete()
+                    self.poster = None
                 self.prevent_cache_clear = False
                 self.view_count = 0
         except VideoModel.DoesNotExist:
@@ -44,10 +54,8 @@ class VideoModel(MediaModel):
     def __unicode__(self):
         return unicode(os.path.split(self.file.path)[1])
 
-    def admin_thumbnail(self):
-        return self.poster.admin_thumbnail(self.get_absolute_url())
-    admin_thumbnail.short_description = _('Thumbnail')
-    admin_thumbnail.allow_tags = True
+    def convertion_unfinished(self):
+        return VideoConvert.objects.filter(video=self, converted=False).exists()
 
     def _get_SIZE_size(self, size):
         mediasize = MediaSizeCache().sizes.get(size)
@@ -59,7 +67,7 @@ class VideoModel(MediaModel):
             return
         return {'width': width, 'height': height}
 
-    def _get_filename_for_size(self, size):
+    def _get_filename_for_size(self, size, invalid_ok=False):
         if hasattr(size, 'name'):
             # size is class
             size_name = size.name
@@ -68,6 +76,8 @@ class VideoModel(MediaModel):
             # size is name
             size_name = size
             mediasize = self._get_SIZE_mediasize(size)
+        if not invalid_ok and VideoConvert.objects.filter(video=self, videosize=mediasize, converted=False).exists():
+            return "unconverted"
         base, ext = os.path.splitext(self.media_filename())
         return ''.join([base, '_', size_name, '.', mediasize.videotype])
 
@@ -102,8 +112,8 @@ class VideoModel(MediaModel):
         override = self.get_override(videosize)
         video_model_obj = override if override else self
 
-        if not VideoConvert.objects.filter(video=self, videosize=videosize).exists():
-            c = VideoConvert.objects.create(video=self, videosize=videosize, converted=False, message='')
+        if not VideoConvert.objects.filter(video=video_model_obj, videosize=videosize).exists():
+            c = VideoConvert.objects.create(video=video_model_obj, videosize=videosize, converted=False, message='')
 
     def remove_size(self, videosize, *args, **kwargs):
         c = VideoConvert.objects.filter(video=self, videosize=videosize)
@@ -111,7 +121,7 @@ class VideoModel(MediaModel):
         super(VideoModel, self).remove_size(videosize, *args, **kwargs)
 
 class VideoSize(MediaSize):
-    videotype = models.CharField(_('type'), max_length=4, choices=VIDEO_TYPES, null=False, blank=False,
+    videotype = models.CharField(_('type'), max_length=4, choices=map(lambda x: (x[0], x[1]), VIDEO_TYPES), null=False, blank=False,
                 help_text=_('This is video format for this video size.'))
     twopass = models.BooleanField(_('two pass?'), default=True, help_text=_('If selected, the conversion will be performed in two passes,\
                     it is slower, but the result is generally better.'))
@@ -126,6 +136,10 @@ class VideoSize(MediaSize):
             self.pre_cache = True
         super(VideoSize, self).save(*args, **kwargs)
 
+    def source_type(self):
+        types = dict(zip(map(lambda x: x[0], VIDEO_TYPES), map(lambda x: x[2], VIDEO_TYPES)))
+        return types[self.videotype]
+
     class Meta:
         ordering = ['width', 'height']
         verbose_name = _('video size')
@@ -134,17 +148,14 @@ class VideoSize(MediaSize):
 class VideoConvert(models.Model):
     video = models.ForeignKey(VideoModel, help_text=_('video to convert'), blank=False, null=False)
     videosize = models.ForeignKey(VideoSize, help_text=_('video size to use'), null=False, blank=False)
-    access_date = models.DateTimeField(_('access date'), default=now, help_text=_('This date changes on each access to this object'))
+    access_date = models.DateTimeField(_('access date'), auto_now=True, help_text=_('This date changes on each access to this object'))
+    time = models.BigIntegerField(_('convertion time'), help_text=_('this is the time the conversion took.'), default=0, blank=True)
     inprogress = models.BooleanField(_('in progress'))
     converted = models.BooleanField(_('converted'))
     message = models.TextField(_('message'), null=True, blank=True)
 
     def __unicode__(self):
         return unicode(self.video)
-
-    def save(self, *args, **kwargs):
-        self.access_date = now()
-        super(VideoConvert, self).save(*args, **kwargs)
 
 class Video(VideoModel, GalleryItemBase):
     class Meta:

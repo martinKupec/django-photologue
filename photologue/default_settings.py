@@ -30,10 +30,10 @@ if PHOTOLOGUE_PATH is not None:
         get_storage_path = getattr(module, parts[-1])
 else:
     def get_storage_path(instance, filename):
-        return os.path.join(PHOTOLOGUE_DIR, 'photos', filename)
+        return os.path.join(PHOTOLOGUE_DIR, 'media', filename)
 
 # Path to default video poster
-DEFAULT_POSTER_PATH = getattr(settings, 'DEFAULT_POSTER_PATH', os.path.join('res', 'sample.jpg'))
+DEFAULT_POSTER_PATH = getattr(settings, 'POSTER_PATH', os.path.join('res', 'sample.jpg'))
 
 # Quality options for JPEG images
 JPEG_QUALITY_CHOICES = (

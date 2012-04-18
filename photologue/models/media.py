@@ -51,18 +51,18 @@ class MediaModel(models.Model):
         mediasize = MediaSizeCache().sizes.get(size)
         if not self.size_exists(mediasize):
             self.create_size(mediasize)
-        if mediasize.increment_count:
-            self.increment_count()
         if not self.file: 
             return
         if not os.path.isfile(self._get_SIZE_filename(size)):
             return
+        if mediasize.increment_count:
+            self.increment_count()
         return '/'.join([self.cache_url(), self._get_filename_for_size(mediasize.name)])
 
-    def _get_SIZE_filename(self, size):
+    def _get_SIZE_filename(self, size, *args, **kwargs):
         mediasize = MediaSizeCache().sizes.get(size)
         return smart_str(os.path.join(self.cache_path(),
-                            self._get_filename_for_size(mediasize.name)))
+                            self._get_filename_for_size(mediasize.name, *args, **kwargs)))
 
     def add_accessor_methods(self, *args, **kwargs):
         for size in MediaSizeCache().sizes.values():

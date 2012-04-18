@@ -2,6 +2,7 @@
 
 """
 import os
+from datetime import timedelta
 from django.contrib import admin
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
@@ -84,18 +85,25 @@ class VideoAdmin(BatchModelAdmin):
 
 class VideoConvertAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
-    list_display = ('video', 'videosize', 'status', 'access_date')
+    list_display = ('video', 'videosize', 'status', 'the_time', 'access_date')
     list_filter = ['videosize', 'converted']
-    exclude = ('access_date',)
+    exclude = ('time',)
     search_fields = ['video']
     list_per_page = 10
+
+    def the_time(self, convert):
+        return str(timedelta(seconds=convert.time))
+    the_time.short_description = _('Convertion time')
 
     def status(self, convert):
         if not convert.converted and not convert.inprogress:
             return _("Queued") 
-        path = convert.video._get_SIZE_filename(convert.videosize.name)
-        s = os.stat(path)
-        fsize = s.st_size
+        path = convert.video._get_SIZE_filename(convert.videosize.name, invalid_ok=True)
+        try:
+            s = os.stat(path)
+            fsize = s.st_size
+        except OSError, e:
+            fsize = 0
         if convert.converted:
             status = "<img src=\"/static/admin/img/icon-yes.gif\" alt=\"True\" /> "
             status += _("Done") + ""

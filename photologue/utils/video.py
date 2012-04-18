@@ -83,15 +83,17 @@ def video_create_poster(videopath, poster, video_data):
     '''
 
     output = ""
+    w,h,aspect = video_sizes(videopath)
     thumbnailfile = NamedTemporaryFile(suffix='.png')
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
                     '-vframes 1 -ss 00:00:10 -an '
                     '-vcodec png -f rawvideo '
-                    '%(outfile)s'
+                    '-s %(size)s %(outfile)s'
                     ) % dict(
                         ffmpeg=FFMPEG,
                         infile=videopath,
-                        outfile=thumbnailfile.name
+                        outfile=thumbnailfile.name,
+                        size="%dx%d" % (w, h)
                     )
 
     (message, retval) = execute(grabimage, "-------------------- GRAB IMAGE ------------------")

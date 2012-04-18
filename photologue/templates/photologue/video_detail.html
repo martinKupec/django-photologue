@@ -12,26 +12,21 @@
 {% block content %}
 
 <h1>{{ object.title }}</h1>
+{% if object.convertion_unfinished %}
+	<p> {% trans "Video convertion in progress." %} </p>
+{% endif %}
 <div class="pl-video">
     {% if object.get_display_mp4_size %}
+		{{ object.increment_count }}
         <video id="video-js-{{ object.id }}" class="video-js vjs-default-skin" controls preload="metadata"
             width="{{ object.get_display_mp4_size.width }}"
             height="{{ object.get_display_mp4_size.height }}" poster="{{ object.get_display_url }}" data-setup="{}">
-
-      {% if object.get_display_flv_url %}
-          <source src="{{ object.get_display_flv_url }}" type='video/flv' />
-      {% endif %} {% if object.get_display_mp4_url %}
-          <source src="{{ object.get_display_mp4_url }}" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"' />
-      {% endif %} {% if object.get_display_ogv_url %}
-          <source src="{{ object.get_display_ogv_url }}" type='video/ogg; codecs="theora, vorbis"' />
-      {% endif %} {% if object.get_display_webm_url %}
-          <source src="{{ object.get_display_webm_url }}" type='video/webm; codecs="vp8, vorbis"' />
-      {% endif %}
+			{% video_sources object "display" %}
       </video>
     {% else %}
         <img src="{{ object.get_display_url }}" alt="{{ object.title}}">
     {% endif %}
-    <p><a href="{{ object.file.url }}">Download</a><p>
+	<p>Downloads: {% video_downloads object "display" %}</p>
     {% if object.caption %}<p>{{ object.caption }}</p>{% endif %}
 </div>
 {% if object.public_galleries %}
