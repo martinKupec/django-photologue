@@ -1,4 +1,5 @@
 from inspect import isclass
+from datetime import datetime
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -55,7 +56,13 @@ class ImageModel(MediaModel):
                 return {}
 
     def save(self, *args, **kwargs):
-        if self.date_taken is None:
+        # Save the original date
+        # this can be None, after save it is changed by underlaying models
+        date_taken = self.date_taken
+        # We have to save first,
+        # this will update the file.path to right location
+        super(ImageModel, self).save(*args, **kwargs)
+        if date_taken is None:
             try:
                 exif_date = self.EXIF.get('EXIF DateTimeOriginal', None)
                 if exif_date is not None:
@@ -65,9 +72,9 @@ class ImageModel(MediaModel):
                     taken = datetime(int(year), int(month), int(day),
                                                int(hour), int(minute), int(second))
                     self.date_taken = make_aware(taken, get_current_timezone())
-            except:
+                    super(ImageModel, self).save(*args, **kwargs)
+            except Exception, e:
                 pass
-        super(ImageModel, self).save(*args, **kwargs)
 
     def _get_SIZE_size(self, size):
         mediasize = MediaSizeCache().sizes.get(size)
@@ -118,12 +125,7 @@ class ImageModel(MediaModel):
         im_filename = getattr(self, "get_%s_filename" % imagesize.name)()
         try:
             if im_format != 'JPEG':
-                #FIXME - this is weird
-                #try:
-                    im.save(im_filename)
-                    return
-                #except KeyError:
-                #    pass
+                im.save(im_filename)
             im.save(im_filename, 'JPEG', quality=int(imagesize.quality), optimize=True)
         except IOError, e:
             if os.path.isfile(im_filename):

@@ -1,15 +1,17 @@
 from os import path
+from datetime import datetime
 import zipfile
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
-from django.utils.timezone import now
+from django.utils.timezone import now, make_aware, get_current_timezone
 from django.core.urlresolvers import reverse
 from django.core.files.base import ContentFile
 from django.template.defaultfilters import slugify
 
 from photologue.default_settings import *
+from photologue.utils.libmc import get_moi_details, set_mpg_dar
 from taggit.managers import TaggableManager
 from taggit.utils import parse_tags
 
@@ -105,6 +107,7 @@ class GalleryUpload(models.Model):
                                 help_text=_('Select a .zip file of images to upload into a new Gallery.'))
     gallery = models.ForeignKey(Gallery, null=True, blank=True, help_text=_('Select a gallery to add these images to. leave this empty to create a new gallery from the supplied title.'))
     title = models.CharField(_('title'), max_length=75, help_text=_('Title of the new gallery.'), blank=True, null=True)
+    use_title = models.BooleanField(_('use title'), default=False, help_text=_('If checked, uploaded files will be named by title + sequencial number'))
     caption = models.TextField(_('caption'), blank=True, help_text=_('Caption will be added to all items.'))
     description = models.TextField(_('description'), blank=True, help_text=_('A description of this Gallery.'))
     is_public = models.BooleanField(_('is public'), default=True, help_text=_('Uncheck this to make the uploaded gallery and included media private.'))
@@ -119,6 +122,7 @@ class GalleryUpload(models.Model):
         try:
             self.process_zipfile()
         except Exception, e:
+            raise e
             pass
         super(GalleryUpload, self).delete()
 
@@ -141,14 +145,22 @@ class GalleryUpload(models.Model):
                                                  description=self.description,
                                                  is_public=self.is_public)
                 gallery.save()
-                gallery.tags.add(*parsed_tags)
+            gallery.tags.add(*parsed_tags)
             from cStringIO import StringIO
             from photo import Photo
             from video import Video
+            count = 0
             for filename in sorted(zip.namelist()):
+                # NOTE: This is workaround to posponed dar update
+                # We cannot do in in the 'data' received, as we
+                # have just read-only reference to them
+                update_dar = False
+
                 if filename.startswith('__'): # do not process meta files
                     continue
                 data = zip.read(filename)
+                date_taken = zip.getinfo(filename).date_time
+                date_taken = make_aware(datetime(*date_taken), get_current_timezone())
                 if len(data):
                     filetype = False
                     # Is it an image?
@@ -164,6 +176,8 @@ class GalleryUpload(models.Model):
                         trial_image.verify()
                         # Ok, It is an image
                         filetype = 'image'
+                        # We will take the date from EXIF
+                        date_taken = None
                     except Exception, e:
                         # if a "bad" file is found we just leave it.
                         pass
@@ -179,14 +193,30 @@ class GalleryUpload(models.Model):
                             sizes = video_sizes(tmp.name)
                             # Ok, it is a video
                             filetype = 'video'
-                        except Exception:
+
+                            # Check for special camera files
+                            if filename.lower().endswith(".mod"):
+                                moi_file = filename[:]
+                                # Translate D -> I and d -> i
+                                moi_file = moi_file[:-1] + chr(ord(moi_file[-1]) + 5)
+                                # This may fail, but it is OK, we will just upload original MOD file
+                                moi_data = zip.read(moi_file)
+                                details = get_moi_details(moi_data)
+                                date_taken = make_aware(details['datetime'], get_current_timezone())
+                                filename = "MOV-%s.MPG" % date_taken.strftime("%Y%m%d-%H%M%S")
+                                # NOTE: default mpg aspect ratio is 4:3
+                                #       change aspect ratio if source is widescreen 16:9 
+                                if details["video_format"] > 1:
+                                    update_dar = True
+                        except Exception, e:
                             # if a "bad" file is found we just leave it.
                             pass
-                    if not filetype: 
+                    if not filetype:
                         continue
-                    count = 0
                     name = os.path.basename(filename)
                     namebase, ext = os.path.splitext(name)
+                    if self.use_title:
+                        namebase = self.title
                     while 1:
                         if count:
                             title = ''.join([namebase, '_'+str(count), ext])
@@ -200,11 +230,13 @@ class GalleryUpload(models.Model):
                                 item = Photo(title=title,
                                           title_slug=slug,
                                           caption=self.caption,
+                                          date_taken=date_taken,
                                           is_public=self.is_public)
                             elif filetype == 'video':
                                 item = Video(title=title,
                                           title_slug=slug,
                                           caption=self.caption,
+                                          date_taken=date_taken,
                                           is_public=self.is_public)
                             else:
                                 raise Exception("Unknown file type")
@@ -212,6 +244,14 @@ class GalleryUpload(models.Model):
                             item.save()
                             item.tags.add(*parsed_tags)
                             gallery.items.add(item)
+                            if not self.use_title:
+                                count = 0
+
+                            if update_dar:
+                                try:
+                                    set_mpg_dar(item.file.path)
+                                except:
+                                    pass
                             break
                         count = count + 1
             zip.close()
