@@ -39,6 +39,7 @@ class Gallery(models.Model):
     tags = TaggableManager(blank=True)
 
     class Meta:
+        app_label=THIS_APP
         ordering = ['-date_added']
         get_latest_by = 'date_added'
         verbose_name = _('gallery')
@@ -101,6 +102,9 @@ class GalleryPermission(models.Model):
     can_download_full_size = models.BooleanField(_('can download media'), default=True, help_text=_('Uncheck this to prevent users from downloading media.'))
     can_download_zip = models.BooleanField(_('can download zip files of the whole gallery'), default=True, help_text=_('Uncheck this to prevent users from downloading a zip file of the whole gallery.'))
 
+    class Meta:
+        app_label=THIS_APP
+
 
 class GalleryUpload(models.Model):
     zip_file = models.FileField(_('media file zip'), upload_to=path.join(PHOTOLOGUE_DIR, "zip-uploads"),
@@ -114,6 +118,7 @@ class GalleryUpload(models.Model):
     tags = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
+        app_label=THIS_APP
         verbose_name = _('gallery upload')
         verbose_name_plural = _('gallery uploads')
 
@@ -314,6 +319,7 @@ class GalleryItemBase(models.Model):
     objects = GalleryItemManager()
 
     class Meta:
+        app_label=THIS_APP
         ordering = ['-date_added']
         get_latest_by = 'date_added'
 

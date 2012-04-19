@@ -28,6 +28,9 @@ def poster_unconverted(poster):
 class VideoModel(MediaModel):
     poster = models.OneToOneField(ImageModel, null=True)
 
+    class Meta:
+        app_label=THIS_APP
+
     def save(self, *args, **kwargs):
         try:
             orig = VideoModel.objects.get(pk=self.pk)
@@ -130,6 +133,12 @@ class VideoSize(MediaSize):
     audiobitrate = models.PositiveIntegerField(_('audio bitrate'), default=32000, help_text=_('Audio bitrate in bits per second.\
                     When set to 0, it will mute audio.'))
 
+    class Meta:
+        app_label=THIS_APP
+        ordering = ['width', 'height']
+        verbose_name = _('video size')
+        verbose_name_plural = _('video sizes')
+
     def save(self, *args, **kwargs):
         if not self.pre_cache:
             self.pre_cache = True
@@ -139,10 +148,6 @@ class VideoSize(MediaSize):
         types = dict(zip(map(lambda x: x[0], VIDEO_TYPES), map(lambda x: x[2], VIDEO_TYPES)))
         return types[self.videotype]
 
-    class Meta:
-        ordering = ['width', 'height']
-        verbose_name = _('video size')
-        verbose_name_plural = _('video sizes')
 
 class VideoConvert(models.Model):
     video = models.ForeignKey(VideoModel, help_text=_('video to convert'), blank=False, null=False)
@@ -153,11 +158,15 @@ class VideoConvert(models.Model):
     converted = models.BooleanField(_('converted'))
     message = models.TextField(_('message'), null=True, blank=True)
 
+    class Meta:
+        app_label=THIS_APP
+
     def __unicode__(self):
         return unicode(self.video)
 
 class Video(VideoModel, GalleryItemBase):
     class Meta:
+        app_label=THIS_APP
         verbose_name = _("video")
         verbose_name_plural = _("videos")
 

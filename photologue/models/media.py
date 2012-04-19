@@ -16,6 +16,9 @@ class MediaModel(models.Model):
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
 
+    class Meta:
+        app_label=THIS_APP
+
     def admin_thumbnail(self, dest_url=None):
         func = getattr(self, 'get_admin_thumbnail_url', None)
         if func is None:
@@ -166,6 +169,9 @@ class MediaOverride(MediaModel):
     content_object = generic.GenericForeignKey("content_type", "object_id")
     mediasize = models.ForeignKey('MediaSize', blank=False)
 
+    class Meta:
+        app_label=THIS_APP
+
 class MediaSize(models.Model):
     name = models.CharField(_('name'), max_length=64, unique=False, help_text=_('Size name should contain only letters, numbers and underscores. Examples: "thumbnail", "display", "small", "main_page_widget".'))
     width = models.PositiveIntegerField(_('width'), default=0, help_text=_('If width is set to "0" the media will be scaled to the supplied height.'))
@@ -174,6 +180,9 @@ class MediaSize(models.Model):
     crop = models.BooleanField(_('crop to fit?'), default=False, help_text=_('If selected the media will be scaled and cropped to fit the supplied dimensions.'))
     pre_cache = models.BooleanField(_('pre-cache?'), default=False, help_text=_('If selected this media size will be pre-cached as media are added.'))
     increment_count = models.BooleanField(_('increment view count?'), default=False, help_text=_('If selected the "view_count" will be incremented when this size is displayed.'))
+
+    class Meta:
+        app_label=THIS_APP
 
     def __unicode__(self):
         return self.name
@@ -259,6 +268,7 @@ class BaseEffect(models.Model):
     description = models.TextField(_('description'), blank=True)
 
     class Meta:
+        app_label=THIS_APP
         abstract = True
 
     def sample_dir(self):

@@ -45,6 +45,9 @@ IMAGE_FILTERS_HELP_TEXT = _('Chain multiple filters using the following pattern 
 class ImageModel(MediaModel):
     effect = models.ForeignKey('ImageEffect', null=True, blank=True, related_name="%(class)s_related", verbose_name=_('effect'))
 
+    class Meta:
+        app_label=THIS_APP
+
     @property
     def EXIF(self):
         try:
@@ -178,11 +181,15 @@ class ImageSize(MediaSize):
     watermark = models.ForeignKey('Watermark', null=True, blank=True, related_name='media_sizes', verbose_name=_('watermark image'))
 
     class Meta:
+        app_label=THIS_APP
         ordering = ['width', 'height']
         verbose_name = _('image size')
         verbose_name_plural = _('image sizes')
 
 class ImageBaseEffect(BaseEffect):
+    class Meta:
+        app_label=THIS_APP
+
     def sample_url(self):
         return settings.MEDIA_URL + '/'.join([PHOTOLOGUE_DIR, 'samples', '%s %s.jpg' % (self.name.lower(), 'sample')])
 
@@ -212,6 +219,7 @@ class ImageEffect(ImageBaseEffect):
     background_color = models.CharField(_('color'), max_length=7, default="#FFFFFF", help_text=_("The background color of the reflection gradient. Set this to match the background color of your page."))
 
     class Meta:
+        app_label=THIS_APP
         verbose_name = _("image effect")
         verbose_name_plural = _("image effects")
 
@@ -245,6 +253,7 @@ class Watermark(ImageBaseEffect):
     opacity = models.FloatField(_('opacity'), default=1, help_text=_("The opacity of the overlay."))
 
     class Meta:
+        app_label=THIS_APP
         verbose_name = _('watermark')
         verbose_name_plural = _('watermarks')
 

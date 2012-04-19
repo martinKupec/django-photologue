@@ -3,6 +3,10 @@ from django.conf import settings
 from django.utils.importlib import import_module
 from django.utils.translation import ugettext_lazy as _
 
+# This is the name of this application set to Meta app_label to all models
+# this is needed in order to work with 'splitted models'
+THIS_APP = 'photologue'
+
 # Default limit for gallery.latest
 LATEST_LIMIT = getattr(settings, 'PHOTOLOGUE_GALLERY_LATEST_LIMIT', None)
 
