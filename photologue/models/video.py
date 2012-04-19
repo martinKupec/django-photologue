@@ -2,7 +2,7 @@ import os
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
-from django.utils.timezone import now
+from django.utils.timezone import now, is_aware, make_aware, get_current_timezone
 from django.utils.functional import curry
 
 from photologue.default_settings import *
@@ -10,6 +10,12 @@ from photologue.utils.video import video_sizes
 from media import *
 from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
+
+try:
+    from dateutil import parser
+    dateutil = True
+except ImportError:
+    dateutil = False
 
 VIDEO_TYPES = (
     ('mp4', 'MPEG-4', 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'),
@@ -32,6 +38,40 @@ class VideoModel(MediaModel):
         app_label=THIS_APP
 
     def save(self, *args, **kwargs):
+        if not self.date_taken and dateutil:
+            # We have no access to any date information as
+            # video files usually don't bundle it
+            # all we can do is to try to get the date from filename
+            date = None
+            name = os.path.basename(self.file.path)
+            name = name.rpartition('.')[0]
+            # Try just whole name without extention
+            try:
+                date = parser.parse(name)
+            except:
+                pass
+            # Try stripping the non-numeric start
+            if not date:
+                try:
+                    for i in xrange(len(name)):
+                        if name[i] in "0123456789":
+                            name = name[i:]
+                            break
+                    date = parser.parse(name)
+                except:
+                    pass
+            # We may have added _X, for some X as sequencial number, strip it
+            if not date:
+                try:
+                    name = name.rpartition('_')[0]
+                    date = parser.parse(name)
+                except:
+                    pass
+            if date:
+                # Win
+                if not is_aware(date):
+                    date = make_aware(date, get_current_timezone())
+                self.date_taken = date
         try:
             orig = VideoModel.objects.get(pk=self.pk)
             if orig.file == self.file:
