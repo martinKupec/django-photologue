@@ -16,6 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         return process_files()
 
+# FIXME - add audio bitrate and mute option!
 def process_files():
     """
     Creates videosize files for the given video objects.

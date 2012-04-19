@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from optparse import make_option
-from photologue.models import PhotoSize, ImageModel
+from photologue.models import MediaSize, MediaModel
 
 class Command(BaseCommand):
     help = ('Clears the Photologue cache for the given sizes.')
@@ -9,27 +8,28 @@ class Command(BaseCommand):
     requires_model_validation = True
     can_import_settings = True
 
-    def handle(self, *args, **options):
-        return create_cache(args, options)
+    def handle(self, *args, **kwargs):
+        return clear_cache(args)
 
-def create_cache(sizes, options):
+def clear_cache(sizes):
     """
-    Clears the cache for the given files
+    Clears the cache for the given sizes
     """
     size_list = [size.strip(' ,') for size in sizes]
 
     if len(size_list) < 1:
-        sizes = PhotoSize.objects.all()
+        sizes = MediaSize.objects.all()
     else:
-        sizes = PhotoSize.objects.filter(name__in=size_list)
+        sizes = MediaSize.objects.filter(name__in=size_list)
 
     if not len(sizes):
         raise CommandError('No photo sizes were found.')
 
     print 'Flushing cache...'
 
-    for cls in ImageModel.__subclasses__():
-        for photosize in sizes:
-            print 'Flushing %s size images' % photosize.name
+    for cls in MediaModel.__subclasses__():
+        print cls.__name__
+        for mediasize in sizes:
+            print 'Flushing %s size images' % mediasize.name
             for obj in cls.objects.all():
-                obj.remove_size(photosize)
+                obj.remove_size(mediasize)

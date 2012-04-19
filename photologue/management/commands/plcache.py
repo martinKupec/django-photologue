@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
-from photologue.models import PhotoSize, ImageModel
+from photologue.models import MediaSize, MediaModel
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -25,19 +25,20 @@ def create_cache(sizes, options):
     size_list = [size.strip(' ,') for size in sizes]
 
     if len(size_list) < 1:
-        sizes = PhotoSize.objects.filter(pre_cache=True)
+        sizes = MediaSize.objects.filter(pre_cache=True)
     else:
-        sizes = PhotoSize.objects.filter(name__in=size_list)
+        sizes = MediaSize.objects.filter(name__in=size_list)
 
     if not len(sizes):
         raise CommandError('No photo sizes were found.')
 
-    print 'Caching photos, this may take a while...'
+    print 'Caching media, this may take a while...'
 
-    for cls in ImageModel.__subclasses__():
-        for photosize in sizes:
-            print 'Cacheing %s size images' % photosize.name
+    for cls in MediaModel.__subclasses__():
+        print cls.__name__
+        for mediasize in sizes:
+            print 'Caching %s size media' % mediasize.name
             for obj in cls.objects.all():
                 if reset:
-                    obj.remove_size(photosize)
-                obj.create_size(photosize)
+                    obj.remove_size(mediasize)
+                obj.create_size(mediasize)
