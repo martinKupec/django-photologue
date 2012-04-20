@@ -1,4 +1,5 @@
 import os
+import datetime
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
@@ -67,7 +68,8 @@ class VideoModel(MediaModel):
                     date = parser.parse(name)
                 except:
                     pass
-            if date:
+			# Check is the date is sane
+            if date and date > datetime.datetime(2000, 1, 1):
                 # Win
                 if not is_aware(date):
                     date = make_aware(date, get_current_timezone())
