@@ -14,6 +14,15 @@ try:
 except ImportError:
     BatchModelAdmin = admin.ModelAdmin
 
+class PolymofrModelAdmin(BatchModelAdmin):
+    def add_view(self, *args, **kwargs):
+        self.exclude = getattr(self, 'add_exclude', ())
+        return super(PolymofrModelAdmin, self).add_view(*args, **kwargs)
+
+    def change_view(self, *args, **kwargs):
+        self.exclude = getattr(self, 'edit_exclude', ())
+        return super(PolymofrModelAdmin, self).change_view(*args, **kwargs)
+
 class GalleryAdmin(BatchModelAdmin):
     batch_actions = ['delete_selected']
     list_display = ('title', 'date_added', 'item_count', 'is_public')
@@ -27,6 +36,7 @@ class PhotoOverrideInline(generic.GenericTabularInline):
     model = MediaOverride
     verbose_name = _("photo override")
     verbose_name_plural = _("photo overrides")
+    exclude = ('date_taken',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "mediasize":
@@ -35,7 +45,7 @@ class PhotoOverrideInline(generic.GenericTabularInline):
             kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
         return super(PhotoOverrideInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class PhotoAdmin(BatchModelAdmin):
+class PhotoAdmin(PolymofrModelAdmin):
     batch_actions = ['delete_selected']
     inlines = [PhotoOverrideInline]
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
@@ -43,6 +53,8 @@ class PhotoAdmin(BatchModelAdmin):
     search_fields = ['title', 'title_slug', 'caption']
     list_per_page = 10
     prepopulated_fields = {'title_slug': ('title',)}
+    add_exclude = ('date_taken', )
+    edit_exclude = ()
 
     def the_tags(self, obj):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))
@@ -57,6 +69,7 @@ class VideoOverrideInline(generic.GenericTabularInline):
     model = MediaOverride
     verbose_name = _("video override")
     verbose_name_plural = _("video overrides")
+    exclude = ('date_taken',)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "mediasize":
@@ -65,7 +78,7 @@ class VideoOverrideInline(generic.GenericTabularInline):
             kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
         return super(VideoOverrideInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class VideoAdmin(BatchModelAdmin):
+class VideoAdmin(PolymofrModelAdmin):
     batch_actions = ['delete_selected']
     inlines = [VideoOverrideInline]
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
@@ -73,7 +86,8 @@ class VideoAdmin(BatchModelAdmin):
     search_fields = ['title', 'title_slug', 'caption']
     list_per_page = 10
     prepopulated_fields = {'title_slug': ('title',)}
-    exclude = ('poster', 'crop_from')
+    add_exclude = ('poster', 'crop_from', 'date_taken')
+    edit_exclude = ('poster', 'crop_from', )
 
     def the_tags(self, obj):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))

@@ -12,7 +12,7 @@ from photologue.default_settings import *
 class MediaModel(models.Model):
     file = models.FileField(_('file'), max_length=MEDIA_FIELD_MAX_LENGTH,
                               upload_to=get_storage_path, blank=False)
-    date_taken = models.DateTimeField(_('date taken'), null=True, blank=True, editable=False)
+    date_taken = models.DateTimeField(_('date taken'), null=True, blank=True)
     view_count = models.PositiveIntegerField(default=0, editable=False)
     crop_from = models.CharField(_('crop from'), blank=True, max_length=10, default='center', choices=CROP_ANCHOR_CHOICES)
 
