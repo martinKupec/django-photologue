@@ -91,7 +91,7 @@ class VideoModel(MediaModel):
         super(VideoModel, self).save(*args, **kwargs)
     
     def delete(self):
-        if self.poster:
+        if self.poster and not poster_unconverted(self.poster):
             self.poster.delete()
         super(VideoModel, self).delete()
 
