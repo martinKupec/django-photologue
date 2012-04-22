@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.core.files.base import File
 from django.core.files.storage import FileSystemStorage
+from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now, is_aware, make_aware, get_current_timezone
 from django.template.defaultfilters import slugify
 
@@ -20,7 +21,7 @@ except ImportError:
         raise ImportError("The Python Imaging Library was not found.")
 
 class Command(BaseCommand):
-    help = ('Scan media upload folder and add any missing gallery items.')
+    help = _('Scan media upload folder and add any missing gallery items.')
 
     requires_model_validation = True
     can_import_settings = True
@@ -42,8 +43,6 @@ def refresh_media():
     """
 
     itemized = map(lambda o: o.file.path, MediaModel.objects.all())
-    for item in itemized:
-        print item
 
     my_root = os.path.join(settings.MEDIA_ROOT, PHOTOLOGUE_DIR)
     for root, dirs, files in os.walk(my_root):
@@ -104,7 +103,7 @@ def refresh_media():
                     item.file.save(full, TemporaryFile(open(full, 'rb')), save=False)
                     item.save()
                     if abs(item.date_taken - item.date_added) < timedelta(seconds=3):
-						item.date_taken = date_taken
-						item.save()
+                        item.date_taken = date_taken
+                        item.save()
                     break
                 count = count + 1

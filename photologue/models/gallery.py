@@ -7,23 +7,13 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now, make_aware, get_current_timezone
 from django.core.urlresolvers import reverse
-from django.core.files.base import ContentFile
 from django.template.defaultfilters import slugify
 
 from photologue.default_settings import *
-from photologue.utils.libmc import get_moi_details, set_mpg_dar
 from taggit.managers import TaggableManager
 from taggit.utils import parse_tags
 
 from media import MediaModel
-
-try:
-    import Image
-except ImportError:
-    try:
-        from PIL import Image
-    except ImportError:
-        raise ImportError("The Python Imaging Library was not found.")
 
 
 class Gallery(models.Model):
@@ -126,12 +116,13 @@ class GalleryUpload(models.Model):
         super(GalleryUpload, self).save(*args, **kwargs)
         try:
             self.process_zipfile()
+            os.remove(self.zip_file.path)
+            super(GalleryUpload, self).delete()
         except Exception, e:
-            raise e
             pass
-        super(GalleryUpload, self).delete()
 
     def process_zipfile(self):
+        from photologue.utils.upload import upload_file
         if path.isfile(self.zip_file.path):
             try:
                 zip = zipfile.ZipFile(self.zip_file.path)
@@ -144,6 +135,7 @@ class GalleryUpload(models.Model):
             parsed_tags = parse_tags(self.tags)
             if self.gallery:
                 gallery = self.gallery
+                self.title = gallery.title
             else:
                 gallery = Gallery.objects.create(title=self.title,
                                                  title_slug=slugify(self.title),
@@ -151,114 +143,27 @@ class GalleryUpload(models.Model):
                                                  is_public=self.is_public)
                 gallery.save()
             gallery.tags.add(*parsed_tags)
-            from cStringIO import StringIO
-            from photo import Photo
-            from video import Video
             count = 0
+
+            def read_file(fn):
+                try:
+                    return zip.read(fn)
+                except:
+                    return None
+
             for filename in sorted(zip.namelist()):
-                # NOTE: This is workaround to posponed dar update
-                # We cannot do in in the 'data' received, as we
-                # have just read-only reference to them
-                update_dar = False
-
-                if filename.startswith('__'): # do not process meta files
-                    continue
                 data = zip.read(filename)
-                date_taken = zip.getinfo(filename).date_time
-                date_taken = make_aware(datetime(*date_taken), get_current_timezone())
-                if len(data):
-                    filetype = False
-                    # Is it an image?
-                    try:
-                        # the following is taken from django.newforms.fields.ImageField:
-                        #  load() is the only method that can spot a truncated JPEG,
-                        #  but it cannot be called sanely after verify()
-                        trial_image = Image.open(StringIO(data))
-                        trial_image.load()
-                        # verify() is the only method that can spot a corrupt PNG,
-                        #  but it must be called immediately after the constructor
-                        trial_image = Image.open(StringIO(data))
-                        trial_image.verify()
-                        # Ok, It is an image
-                        filetype = 'image'
-                        # We will take the date from EXIF
-                        date_taken = None
-                    except Exception, e:
-                        # if a "bad" file is found we just leave it.
-                        pass
-                    # Is it a video?
-                    if not filetype:
-                        try:
-                            from django.core.files.temp import NamedTemporaryFile
-                            from photologue.utils.video import video_sizes
-
-                            tmp = NamedTemporaryFile()
-                            tmp.write(data)
-                            # Try to open this file as video and get sizes
-                            sizes = video_sizes(tmp.name)
-                            # Ok, it is a video
-                            filetype = 'video'
-
-                            # Check for special camera files
-                            if filename.lower().endswith(".mod"):
-                                moi_file = filename[:]
-                                # Translate D -> I and d -> i
-                                moi_file = moi_file[:-1] + chr(ord(moi_file[-1]) + 5)
-                                # This may fail, but it is OK, we will just upload original MOD file
-                                moi_data = zip.read(moi_file)
-                                details = get_moi_details(moi_data)
-                                date_taken = make_aware(details['datetime'], get_current_timezone())
-                                filename = "MOV-%s.MPG" % date_taken.strftime("%Y%m%d-%H%M%S")
-                                # NOTE: default mpg aspect ratio is 4:3
-                                #       change aspect ratio if source is widescreen 16:9 
-                                if details["video_format"] > 1:
-                                    update_dar = True
-                        except Exception, e:
-                            # if a "bad" file is found we just leave it.
-                            pass
-                    if not filetype:
-                        continue
+                file_mtime = zip.getinfo(filename).date_time
+                file_mtime = make_aware(datetime(*file_mtime), get_current_timezone())
+                if self.use_title:
                     name = os.path.basename(filename)
                     namebase, ext = os.path.splitext(name)
-                    if self.use_title:
-                        namebase = self.title
-                    while 1:
-                        if count:
-                            title = ''.join([namebase, '_'+str(count), ext])
-                        else:
-                            title = name
-                        slug = slugify(title)
-                        try:
-                            p = GalleryItemBase.objects.get(title_slug=slug)
-                        except GalleryItemBase.DoesNotExist:
-                            if filetype == 'image':
-                                item = Photo(title=title,
-                                          title_slug=slug,
-                                          caption=self.caption,
-                                          date_taken=date_taken,
-                                          is_public=self.is_public)
-                            elif filetype == 'video':
-                                item = Video(title=title,
-                                          title_slug=slug,
-                                          caption=self.caption,
-                                          date_taken=date_taken,
-                                          is_public=self.is_public)
-                            else:
-                                raise Exception("Unknown file type")
-                            item.file.save(title, ContentFile(data), save=False)
-                            item.save()
-                            item.tags.add(*parsed_tags)
-                            gallery.items.add(item)
-                            if not self.use_title:
-                                count = 0
-
-                            if update_dar:
-                                try:
-                                    set_mpg_dar(item.file.path)
-                                except:
-                                    pass
-                            break
-                        count = count + 1
+                    name = ''.join([self.title, ext])
+                else:
+                    name = filename
+                count = upload_file(name, filename, data, file_mtime, read_file, parsed_tags, gallery, self.caption, self.is_public, count)
+                if not self.use_title:
+                    count = 0
             zip.close()
 
 class GalleryItemQuerySet(models.query.QuerySet):

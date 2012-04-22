@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
-#from photologue.models import VideoConvert
 
 FFMPEG = getattr(settings, 'VIDEOLOGUE_FFMPEG', 'ffmpeg')
 FLVTOOL = getattr(settings, 'VIDEOLOGUE_FLVTOOL', 'flvtool2')
