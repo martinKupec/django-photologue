@@ -17,7 +17,7 @@
 {% endif %}
 <div class="pl-video">
     {% if object.get_display_mp4_size %}
-		{{ object.increment_count }}
+		{{ object.increment_count|default:'' }}
         <video id="video-js-{{ object.id }}" class="video-js vjs-default-skin" controls preload="metadata"
             width="{{ object.get_display_mp4_size.width }}"
             height="{{ object.get_display_mp4_size.height }}" poster="{{ object.get_display_url }}" data-setup="{}">
