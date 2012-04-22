@@ -60,7 +60,8 @@ def add_folder(folder, gallery=None):
         if not os.path.isfile(full):
             continue
         file_mtime = datetime.fromtimestamp(os.path.getmtime(full))
-        file_mtime = make_aware(file_mtime, get_current_timezone())
+        if not is_aware(file_mtime):
+            file_mtime = make_aware(file_mtime, get_current_timezone())
         with open(full, 'rb') as f:
             upload_file(filename, filename, f, file_mtime, read_file, None, gallery)
     return _('Done')

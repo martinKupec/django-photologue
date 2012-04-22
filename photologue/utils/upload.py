@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from cStringIO import StringIO
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files.base import ContentFile, File
@@ -107,8 +108,6 @@ def upload_file(name, original_name, content, date_taken=None, retrieve_another=
                 kwargs['caption'] = caption
             if is_public:
                 kwargs['is_public'] = is_public
-            if date_taken:
-                kwargs['date_taken'] = date_taken
 
             if filetype == 'image':
                 item = Photo(**kwargs)
@@ -123,6 +122,10 @@ def upload_file(name, original_name, content, date_taken=None, retrieve_another=
             item.save()
             if tags:
                 item.tags.add(*tags)
+            # Assume that item is added to photologue at least 3 seconds after created
+            if date_taken and abs(item.date_taken - item.date_added) < timedelta(seconds=3):
+                item.date_taken = date_taken
+                item.save()
             if gallery:
                 gallery.items.add(item)
             if update_dar:

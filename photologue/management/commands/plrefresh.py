@@ -57,7 +57,8 @@ def refresh_media():
             if full in itemized:
                 continue
             date_taken = datetime.fromtimestamp(os.path.getmtime(full))
-            date_taken = make_aware(date_taken, get_current_timezone())
+            if not is_aware(date_taken):
+                date_taken = make_aware(date_taken, get_current_timezone())
 
             # Next part is taken from process_zipfile
             filetype = False
