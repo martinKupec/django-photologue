@@ -10,14 +10,15 @@ class Command(BaseCommand):
 
     help = ('Converts unprocessed photologue video files.')
 
+    args = ['[poster]']
     requires_model_validation = True
     can_import_settings = True
 
     def handle(self, *args, **options):
-        return process_files()
+        return process_files(*args)
 
 # FIXME - add audio bitrate and mute option!
-def process_files():
+def process_files(select=None):
     """
     Creates videosize files for the given video objects.
     """
@@ -78,6 +79,13 @@ def process_files():
             print e
             convert.inprogress = False
             convert.message = e
+            convert.save()
+            continue
+
+
+        if select == 'poster':
+            # Save after poster creation
+            convert.inprogress = False
             convert.save()
             continue
 
