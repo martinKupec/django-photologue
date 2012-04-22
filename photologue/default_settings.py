@@ -1,4 +1,5 @@
 import os
+import stat
 from django.conf import settings
 from django.utils.importlib import import_module
 from django.utils.translation import ugettext_lazy as _
@@ -38,6 +39,11 @@ else:
 
 # Path to default video poster
 DEFAULT_POSTER_PATH = getattr(settings, 'POSTER_PATH', os.path.join('res', 'sample.jpg'))
+
+# Make all file creations user/group rw
+DEFAULT_PHOTOLOGUE_GROUP_WRITE = getattr(settings, 'PHOTOLOGUE_GROUP_WRITE', True)
+if DEFAULT_PHOTOLOGUE_GROUP_WRITE:
+    old = os.umask(stat.S_IWOTH)
 
 # Quality options for JPEG images
 JPEG_QUALITY_CHOICES = (
