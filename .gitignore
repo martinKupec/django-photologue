@@ -1,14 +1,4 @@
 *.pyc
-*.egg-info/
+/static/video-js
 
-db.sqlite
-.DS_Store
-/photologue/fixtures/test.json
-/__init__.py
-/urls.py
-/settings.py
-/manage.py
-/wsgi.py
-/photologue/static/video-js
-/templates
-/media
+/fixtures/test.json
