@@ -8,29 +8,40 @@ from django.contrib import admin
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
 from models import *
+from admin_tweaks.actions import slow_delete_selected
 
-try:
-    from batchadmin.admin import BatchModelAdmin
-except ImportError:
-    BatchModelAdmin = admin.ModelAdmin
+class SlowDeleteModelAdmin(admin.ModelAdmin):
+    def get_actions(self, request):
+        actions = super(SlowDeleteModelAdmin, self).get_actions(request)
+        d = actions['delete_selected']
+        actions['delete_selected'] = (slow_delete_selected, d[1], d[2])
+        return actions
 
-class PolymofrModelAdmin(BatchModelAdmin):
-    def add_view(self, *args, **kwargs):
-        self.exclude = getattr(self, 'add_exclude', ())
-        return super(PolymofrModelAdmin, self).add_view(*args, **kwargs)
-
-    def change_view(self, *args, **kwargs):
-        self.exclude = getattr(self, 'edit_exclude', ())
-        return super(PolymofrModelAdmin, self).change_view(*args, **kwargs)
-
-class GalleryAdmin(BatchModelAdmin):
-    batch_actions = ['delete_selected']
+class GalleryAdmin(admin.ModelAdmin):
     list_display = ('title', 'date_added', 'item_count', 'is_public')
     list_filter = ['date_added', 'is_public']
     date_hierarchy = 'date_added'
     prepopulated_fields = {'title_slug': ('title',)}
     search_fields = ['items']
     filter_horizontal = ('items',)
+
+class GalleryItemModelAdmin(SlowDeleteModelAdmin):
+    actions = ['reconvert']
+
+    def add_view(self, *args, **kwargs):
+        self.exclude = getattr(self, 'add_exclude', ())
+        return super(GalleryItemModelAdmin, self).add_view(*args, **kwargs)
+
+    def change_view(self, *args, **kwargs):
+        self.exclude = getattr(self, 'edit_exclude', ())
+        return super(GalleryItemModelAdmin, self).change_view(*args, **kwargs)
+
+    def reconvert(self, request, changelist):
+        for item in changelist:
+            item.clear_cache()
+            item.pre_cache()
+        self.message_user(request, _("Items scheduled to reconvert."))
+    reconvert.short_description = _("Reconvert")
 
 class PhotoOverrideInline(generic.GenericTabularInline):
     model = MediaOverride
@@ -45,8 +56,7 @@ class PhotoOverrideInline(generic.GenericTabularInline):
             kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
         return super(PhotoOverrideInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class PhotoAdmin(PolymofrModelAdmin):
-    batch_actions = ['delete_selected']
+class PhotoAdmin(GalleryItemModelAdmin):
     inlines = [PhotoOverrideInline]
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
@@ -78,8 +88,7 @@ class VideoOverrideInline(generic.GenericTabularInline):
             kwargs["queryset"] = MediaSize.objects.filter(id__in=ids)
         return super(VideoOverrideInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
-class VideoAdmin(PolymofrModelAdmin):
-    batch_actions = ['delete_selected']
+class VideoAdmin(GalleryItemModelAdmin):
     inlines = [VideoOverrideInline]
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
@@ -98,8 +107,7 @@ class VideoAdmin(PolymofrModelAdmin):
             db_field.verbose_name = _('Video')
         return super(VideoAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
-class VideoConvertAdmin(BatchModelAdmin):
-    batch_actions = ['delete_selected']
+class VideoConvertAdmin(admin.ModelAdmin):
     list_display = ('video', 'videosize', 'status', 'the_time', 'access_date')
     list_filter = ['videosize', 'converted']
     exclude = ('time',)
@@ -128,14 +136,13 @@ class VideoConvertAdmin(BatchModelAdmin):
     status.short_description = _('Status')
     status.allow_tags = True
 
-class GalleryPermissionAdmin(BatchModelAdmin):
+class GalleryPermissionAdmin(admin.ModelAdmin):
     list_display = ('gallery', 'can_access_gallery', 'can_see_normal_size', 'can_download_full_size', 'can_download_zip',)
     list_filter = ['can_access_gallery', 'can_see_normal_size', 'can_download_full_size', 'can_download_zip']
     search_fields = ['gallery', 'users']
     filter_horizontal = ('users',)
 
-class ImageEffectAdmin(BatchModelAdmin):
-    batch_actions = ['delete_selected']
+class ImageEffectAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'color', 'brightness', 'contrast', 'sharpness', 'filters', 'admin_sample')
     fieldsets = (
         (None, {
@@ -155,8 +162,7 @@ class ImageEffectAdmin(BatchModelAdmin):
         }),
     )
 
-class ImageSizeAdmin(BatchModelAdmin):
-    batch_actions = ['delete_selected']
+class ImageSizeAdmin(SlowDeleteModelAdmin):
     list_display = ('name', 'width', 'height', 'crop', 'pre_cache', 'effect', 'increment_count')
     fieldsets = (
         (None, {
@@ -170,8 +176,7 @@ class ImageSizeAdmin(BatchModelAdmin):
         }),
     )
 
-class VideoSizeAdmin(BatchModelAdmin):
-    batch_actions = ['delete_selected']
+class VideoSizeAdmin(SlowDeleteModelAdmin):
     list_display = ('name', 'videotype', 'width', 'height', 'videobitrate', 'audiobitrate', 'increment_count')
     fieldsets = (
         (None, {
@@ -185,8 +190,7 @@ class VideoSizeAdmin(BatchModelAdmin):
         }),
     )
 
-class WatermarkAdmin(BatchModelAdmin):
-    batch_actions = ['delete_selected']
+class WatermarkAdmin(admin.ModelAdmin):
     list_display = ('name', 'opacity', 'style')
 
 
@@ -200,7 +204,7 @@ class GalleryUploadAdminForm(forms.ModelForm):
             raise forms.ValidationError(_("Eighter gallery or title has to be filled."))
         return self.cleaned_data["title"]
 
-class GalleryUploadAdmin(BatchModelAdmin):
+class GalleryUploadAdmin(admin.ModelAdmin):
     form = GalleryUploadAdminForm
     def has_change_permission(self, request, obj=None):
         return False # To remove the 'Save and continue editing' button
