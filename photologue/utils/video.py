@@ -68,7 +68,7 @@ def execute(command, header):
     print header
     print "Command: %s\n" % command
 
-    child = subprocess.Popen(shlex.split(str(command)), stdout=subprocess.PIPE)
+    child = subprocess.Popen(shlex.split(str(command)), stdout=subprocess.PIPE, preexec_fn=lambda : os.nice(20))
 
     msg = header + "\n"
     msg += "Command: %s\n" % command
