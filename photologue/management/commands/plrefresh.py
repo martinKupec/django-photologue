@@ -100,8 +100,13 @@ def refresh_media():
                                   title_slug=slug)
                     else:
                         raise Exception("Unknown file type")
+
+                    file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
+                    prefix = os.path.commonprefix([file_root , full])
+                    url = full[len(prefix):]
+
                     item.file.storage.__class__ = OverrideStorage
-                    item.file.save(full, TemporaryFile(open(full, 'rb')), save=False)
+                    item.file.save(url, TemporaryFile(open(full, 'rb')), save=False)
                     item.save()
                     if abs(item.date_taken - item.date_added) < timedelta(seconds=3):
                         item.date_taken = date_taken
