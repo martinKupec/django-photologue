@@ -6,44 +6,13 @@ from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
 
-FFMPEG = getattr(settings, 'VIDEOLOGUE_FFMPEG', 'ffmpeg')
-FLVTOOL = getattr(settings, 'VIDEOLOGUE_FLVTOOL', 'flvtool2')
-AUDIO_CODEC = getattr(settings, 'VIDEOLOGUE_AUDIO_CODEC', 'libmp3lame')
-AUDIO_SAMPLING_RATE = getattr(settings, 'VIDEOLOGUE_AUDIO_SAMPLING_RATE', 22050)
-
-hq_pre = '''\
-coder=1
-flags=+loop
-cmp=+chroma
-partitions=-parti8x8-parti4x4-partp8x8-partb8x8
-me_method=umh
-subq=8
-me_range=16
-g=250
-keyint_min=25
-sc_threshold=40
-i_qfactor=0.71
-b_strategy=2
-qcomp=0.6
-qmin=10
-qmax=51
-qdiff=4
-bf=4
-refs=4
-directpred=3
-trellis=1
-flags2=+bpyramid+wpred+mixed_refs+dct8x8+fastpskip
-'''
-
-ipod640_pre = '''\
-coder=0
-bf=0
-refs=1
-flags2=-wpred-dct8x8
-level=30
-maxrate=10000000
-bufsize=10000000
-'''
+FFMPEG = getattr(settings, 'PHOTOLOGUE_FFMPEG', 'ffmpeg')
+FLVTOOL = getattr(settings, 'PHOTOLOGUE_FLVTOOL', 'flvtool2')
+#AUDIO_AAC = getattr(settins, 'PHOTOLOGUE_AUDIO_AAC', 'libvo_aacenc')
+AUDIO_AAC = getattr(settings, 'PHOTOLOGUE_AUDIO_AAC', 'libfaac -ac 2')
+AUDIO_MP3 = getattr(settings, 'PHOTOLOGUE_AUDIO_MP3', 'libmp3lame')
+AUDIO_OGG = getattr(settings, 'PHOTOLOGUE_AUDIO_OGG', 'libvorbis')
+AUDIO_SAMPLING_RATE = getattr(settings, 'PHOTOLOGUE_AUDIO_SAMPLING_RATE', 22050)
 
 def video_sizes(video_file):
     indata = subprocess.Popen([FFMPEG, '-i', video_file],
@@ -111,13 +80,11 @@ def video_create_poster(videopath, poster, video_data):
     poster.save()
     return output
 
-def convertvideo_flv(video_in, video_out, videosize, video_data):
+def convertvideo_flv(video_in, video_out, video_data):
     ''' Convert the video to .flv
     '''
 
     output = ""
-    bitrate = "%s" % videosize.audiobitrate
-
     ffmpeg = (  '%(ffmpeg)s -y -i "%(infile)s" '
                 '-acodec %(audioc)s -ar %(audiosr)s -ab %(audiobr)s '
                 '-f flv %(letterboxing)s -s %(size)s %(outfile)s'
@@ -126,9 +93,9 @@ def convertvideo_flv(video_in, video_out, videosize, video_data):
                     infile=video_in,
                     audioc=AUDIO_CODEC,
                     audiosr=AUDIO_SAMPLING_RATE,
-                    audiobr=bitrate,
+                    audiobr="%s" % video_data['audiobitrate'],
                     letterboxing=video_data.get('letterboxing', ''),
-                    size=video_data['size'],
+                    size="%dx%d" % video_data['size'],
                     outfile=video_out
                 )
 
@@ -156,40 +123,41 @@ def convertvideo_flv(video_in, video_out, videosize, video_data):
         raise Exception('FLV creation have failed(file zero size)\n\n' + output)
     return output
 
-def convertvideo_mp4(video_in, video_out, videosize, video_data):
+def convertvideo_mp4(video_in, video_out, video_data):
     ''' Convert the video to .mp4
     '''
 
     output = ""
     try:
-        hq_prefilename = mktemp()
-        hq_prefile = open(hq_prefilename, 'w')
-        hq_prefile.write(hq_pre)
-        hq_prefile.close()
-        ipod640_prefilename = mktemp()
-        ipod640_prefile = open(ipod640_prefilename, 'w')
-        ipod640_prefile.write(ipod640_pre)
-        ipod640_prefile.close()
-
-        bitrate = "%dk" % videosize.videobitrate
+        common_options = ('-vcodec libx264 -vprofile high -preset slower -b:v %(vb)dk '
+                          '-maxrate %(vb)dk -bufsize %(bfs)dk %(letterboxing)s -vf scale=%(size)s '
+                          '-threads 0 '
+                        ) % dict(
+                            vb=video_data['videobitrate'],
+                            bfs=2*video_data['videobitrate'],
+                            letterboxing=video_data.get('letterboxing', ''),
+                            size="%d:%d" % video_data['size'],
+                        )
+        audio_pass1 = '-an '
+        if not video_data['audiobitrate']:
+            audio_pass2 = audio_pass1
+        else:
+            audio_pass2 = ('-acodec %(acodec)s -b:a %(ab)dk '
+                          ) % dict(
+                            acodec=AUDIO_AAC,
+                            ab=video_data['audiobitrate'],
+                            )
     
-        if videosize.twopass:
+        if video_data['twopass']:
             original_files = os.listdir('.') # used later for cleanup
-            ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" -b:v %(bitrate)s '
-                        '-vcodec libx264 -fpre "%(hq_prefile)s" -fpre "%(ipod640_prefile)s" '
-                        '-an -pass 1 -s %(size)s %(letterboxing)s -f rawvideo '
-                        '%(outfile)s'
+            ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" %(common)s '
+                        '-pass 1 %(audio)s -f mp4 %(outfile)s'
                         ) % dict(
                             ffmpeg=FFMPEG,
                             source=video_in,
-                            size=video_data['size'],
-                            letterboxing=video_data.get('letterboxing', ''),
-                            # For first-pass, use a null output.  Windows needs the
-                            #   NUL keyword, linuxy systems can use /dev/null
+                            common=common_options,
+                            audio=audio_pass1,
                             outfile='/dev/null' if os.path.exists('/dev/null') else 'NUL',
-                            ipod640_prefile=ipod640_prefilename,
-                            hq_prefile=hq_prefilename,
-                            bitrate=bitrate,
                         )
     
             output += "Source : %s\n" % video_in
@@ -200,26 +168,21 @@ def convertvideo_mp4(video_in, video_out, videosize, video_data):
             if retval:
                 raise Exception('MP4 creation have failed(pass 1)\n\n' + output)
     
-        ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" -b:v %(bitrate)s '
-                    '-vcodec libx264 -fpre "%(hq_prefile)s" -fpre "%(ipod640_prefile)s" '
-                    '-acodec libfaac -ac 2 '
-                    '%(letterboxing)s '
-                    '-s %(size)s %(twopass)s %(outfile)s'
+        ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" %(common)s '
+                    '%(twopass)s %(audio)s -f mp4 %(outfile)s'
                     ) % dict(
-                        ffmpeg=FFMPEG, source=video_in,
-                        letterboxing=video_data.get('letterboxing', ''),
-                        size=video_data['size'],
-                        twopass='-pass 2' if videosize.twopass else '',
+                        ffmpeg=FFMPEG,
+                        source=video_in,
+                        common=common_options,
+                        twopass='-pass 2' if video_data['twopass'] else '',
+                        audio=audio_pass2,
                         outfile=video_out,
-                        ipod640_prefile=ipod640_prefilename,
-                        hq_prefile=hq_prefilename,
-                        bitrate=bitrate,
                     )
     
         output += "Source : %s\n" % video_in
         output += "Target : %s\n" % video_out
     
-        header = ("------------- FFMPEG : MP4 : Pass2 -------------" if videosize.twopass else
+        header = ("------------- FFMPEG : MP4 : Pass2 -------------" if video_data['twopass'] else
                   "----------------- FFMPEG : MP4 -----------------")
         (message, retval) = execute(ffmpeg, header)
         output += message
@@ -232,22 +195,18 @@ def convertvideo_mp4(video_in, video_out, videosize, video_data):
             output += "Target file is 0 bytes conversion failed?\n\n"
             raise Exception('MP4 creation have failed(file zero size)\n\n' + output)
     finally:
-        if videosize.twopass:
+        if video_data['twopass']:
             # Cleanup our 2-pass logfiles
             logs = filter(lambda x: x.endswith('.log') and '2pass' in x, set(os.listdir('.'))-set(original_files))
             for log in logs:
                 os.unlink(log)
-    
-        os.unlink(hq_prefilename)
-        os.unlink(ipod640_prefilename)
     return output
 
-def convertvideo_ogv(video_in, video_out, videosize, video_data):
+def convertvideo_ogv(video_in, video_out, video_data):
     ''' Convert the video to .ogv
     '''
 
     output = ""
-    bitrate = "%dk" % videosize.videobitrate
     ffmpeg = (  '%(ffmpeg)s -y -i "%(infile)s" -b:v %(bitrate)s '
                 '-vcodec libtheora -acodec libvorbis '
                 '%(letterboxing)s -s %(size)s %(outfile)s '
@@ -257,7 +216,7 @@ def convertvideo_ogv(video_in, video_out, videosize, video_data):
                     letterboxing=video_data.get('letterboxing', ''),
                     size=video_data['size'],
                     outfile=video_out,
-                    bitrate=bitrate,
+                    bitrate="%dk" % video_data['videobitrate'],
                 )
 
     output += "Source : %s\n" % video_in
@@ -275,38 +234,41 @@ def convertvideo_ogv(video_in, video_out, videosize, video_data):
         raise Exception('OGV creation have failed(file zero size)\n\n' + output)
     return output
 
-def convertvideo_webm(video_in, video_out, videosize, video_data):
+def convertvideo_webm(video_in, video_out, video_data):
     ''' Convert the video to .webm
     '''
 
-    libvpx_flags = ('-qcomp 0.6 -g 360 -qmin 0 -qmax 60 -quality best '
-                    '-vp8flags +altref -rc_lookahead 16 '
-                    '-minrate 20 -maxrate 800 '
-                    '-mb_threshold 0 -skip_threshold 0 '
-                    )
-
     output = ""
     try:
-        bitrate = "%dk" % videosize.videobitrate
+        common_options = ('-codec:v libvpx -quality good -cpu-used 0 -b:v %(vb)dk -qmin 10 -qmax 42 '
+                          '-maxrate %(vb)dk -bufsize %(bfs)dk -threads 2 %(letterboxing)s -vf scale=%(size)s '
+                        ) % dict(
+                            vb=video_data['videobitrate'],
+                            bfs=2*video_data['videobitrate'],
+                            letterboxing=video_data.get('letterboxing', ''),
+                            size="%d:%d" % video_data['size'],
+                        )
+        audio_pass1 = '-an '
+        if not video_data['audiobitrate']:
+            audio_pass2 = audio_pass1
+        else:
+            audio_pass2 = ('-codec:a %(acodec)s -b:a %(ab)dk '
+                          ) % dict(
+                            acodec=AUDIO_OGG,
+                            ab=video_data['audiobitrate'],
+                            )
     
-        if videosize.twopass:
+        if video_data['twopass']:
             original_files = os.listdir('.') # used later for cleanup
-            ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" -b:v %(bitrate)s '
-                        '-vcodec libvpx -slices 2 %(vpxflags)s '
-                        '-an -pass 1 -s %(size)s %(letterboxing)s -f rawvideo '
-                        '%(outfile)s'
+            ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" %(common)s '
+                        '-pass 1 %(audio)s -f webm %(outfile)s'
                         ) % dict(
                             ffmpeg=FFMPEG,
                             source=video_in,
-                            size=video_data['size'],
-                            letterboxing=video_data.get('letterboxing', ''),
-                            # For first-pass, use a null output.  Windows needs the
-                            #   NUL keyword, linuxy systems can use /dev/null
+                            common=common_options,
+                            audio=audio_pass1,
                             outfile='/dev/null' if os.path.exists('/dev/null') else 'NUL',
-                            vpxflags=libvpx_flags,
-                            bitrate=bitrate,
                         )
-    
             output += "Source : %s\n" % video_in
             output += "Target : %s\n" % video_out
     
@@ -315,25 +277,21 @@ def convertvideo_webm(video_in, video_out, videosize, video_data):
             if retval:
                 raise Exception('WEBM creation have failed(pass 1)\n\n' + output)
     
-        ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" -b:v %(bitrate)s '
-                    '-vcodec libvpx -slices 2 %(vpxflags)s '
-                    '-acodec libvorbis -ac 2 '
-                    '%(letterboxing)s '
-                    '-s %(size)s %(twopass)s %(outfile)s'
+        ffmpeg = (  '%(ffmpeg)s -y -i "%(source)s" %(common)s '
+                    '%(twopass)s %(audio)s -f webm %(outfile)s'
                     ) % dict(
-                        ffmpeg=FFMPEG, source=video_in,
-                        letterboxing=video_data.get('letterboxing', ''),
-                        size=video_data['size'],
-                        twopass='-pass 2' if videosize.twopass else '',
+                        ffmpeg=FFMPEG,
+                        source=video_in,
+                        common=common_options,
+                        twopass='-pass 2' if video_data['twopass'] else '',
+                        audio=audio_pass2,
                         outfile=video_out,
-                        vpxflags=libvpx_flags,
-                        bitrate=bitrate,
                     )
     
         output += "Source : %s\n" % video_in
         output += "Target : %s\n" % video_out
     
-        header = ("------------- FFMPEG : WEBM : Pass2 -------------" if videosize.twopass else
+        header = ("------------- FFMPEG : WEBM : Pass2 -------------" if video_data['twopass'] else
                   "----------------- FFMPEG : WEBM -----------------")
         (message, retval) = execute(ffmpeg, header)
         output += message
@@ -347,7 +305,7 @@ def convertvideo_webm(video_in, video_out, videosize, video_data):
             raise Exception('WEBM creation have failed(file zero size)\n\n' + output)
     
     finally:
-        if videosize.twopass:
+        if video_data['twopass']:
             # Cleanup our 2-pass logfiles
             logs = filter(lambda x: x.endswith('.log') and '2pass' in x, set(os.listdir('.'))-set(original_files))
             for log in logs:

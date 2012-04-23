@@ -17,7 +17,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         return process_files(*args)
 
-# FIXME - add audio bitrate and mute option!
 def process_files(select=None):
     """
     Creates videosize files for the given video objects.
@@ -57,11 +56,15 @@ def process_files(select=None):
             out_w = in_w
             out_h = in_h
         elif out_w == 0:
-            out_w = int(round(in_h*in_aspect))
+            out_w = int((out_h*in_aspect + 1)/2)*2
         elif out_h == 0:
-            out_h = int(round(out_w/in_aspect))
+            out_h = int((out_w/in_aspect + 1)/2)*2
         
-        video_data = {'size': '%sx%s' % (out_w, out_h)}
+        video_data = {'size': (out_w, out_h),
+                      'videobitrate': convert.videosize.videobitrate,
+                      'audiobitrate': convert.videosize.audiobitrate,
+                      'twopass': convert.videosize.twopass,
+                      }
         if convert.videosize.letterbox:
             # Desired output aspect
             out_aspect = 1.*out_w/out_h
@@ -69,7 +72,7 @@ def process_files(select=None):
             conv_height = int(out_w/in_aspect)
             # Set for processing
             video_data['letterboxing'] = '-vf pad="%d:%d:(ow-iw)/2:(oh-ih)/2:black"' % (out_w, conv_height)
-            video_data['size'] = '%sx%s' % (out_w, conv_height)
+            video_data['size'] = (out_w, conv_height)
 
         # Create poster
         try:
@@ -97,7 +100,7 @@ def process_files(select=None):
                 os.remove(out)
             except:
                 pass
-            convert.message += globals()[func](filepath, out, convert.videosize, video_data)
+            convert.message += globals()[func](filepath, out, video_data)
         except Exception, e:
             try:
                 os.remove(out)

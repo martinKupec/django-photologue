@@ -19,10 +19,10 @@ except ImportError:
     dateutil = False
 
 VIDEO_TYPES = (
-    ('mp4', 'MPEG-4', 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'),
-    ('ogv', 'Vorbis', 'video/ogg; codecs="theora, vorbis"'),
+    ('mp4', 'MPEG-4', 'video/mp4'),
+    ('ogv', 'Vorbis', 'video/ogg'),
     ('flv', 'Flash', 'video/flv'),
-    ('webm', 'WebM', 'video/webm; codecs="vp8, vorbis"'),
+    ('webm', 'WebM', 'video/webm'),
 )
 
 def poster_unconverted(poster):
@@ -68,7 +68,7 @@ class VideoModel(MediaModel):
                     date = parser.parse(name)
                 except:
                     pass
-			# Check is the date is sane
+            # Check is the date is sane
             if date and date > datetime.datetime(2000, 1, 1):
                 # Win
                 if not is_aware(date):
@@ -171,8 +171,8 @@ class VideoSize(MediaSize):
                     it is slower, but the result is generally better.'))
     letterbox = models.BooleanField(_('letterbox'), default=True, help_text=_('If enabled and aspect ratio is not matching,\
                     put the video in black box.'))
-    videobitrate = models.PositiveIntegerField(_('video bitrate (kbps)'), default=2000, help_text=_('Video bitrate in kilobits per second.'))
-    audiobitrate = models.PositiveIntegerField(_('audio bitrate'), default=32000, help_text=_('Audio bitrate in bits per second.\
+    videobitrate = models.PositiveIntegerField(_('video bitrate (kbps)'), default=1000, help_text=_('Video bitrate in kilobits per second.'))
+    audiobitrate = models.PositiveIntegerField(_('audio bitrate (kbps)'), default=128, help_text=_('Audio bitrate in kilobits per second.\
                     When set to 0, it will mute audio.'))
 
     class Meta:
