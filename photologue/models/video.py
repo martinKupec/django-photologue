@@ -95,9 +95,6 @@ class VideoModel(MediaModel):
             self.poster.delete()
         super(VideoModel, self).delete()
 
-    def __unicode__(self):
-        return unicode(os.path.split(self.file.path)[1])
-
     def convertion_unfinished(self):
         return VideoConvert.objects.filter(video=self, converted=False).exists()
 

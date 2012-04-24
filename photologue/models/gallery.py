@@ -62,10 +62,7 @@ class Gallery(models.Model):
     
     def latest_item(self, public=True):
         try:
-            if public:
-                return self.latest(limit=1)[0]
-            else:
-                return self.latest(limit=1)[0]
+            return self.latest(limit=1, public=public)[0]
         except IndexError:
             return False
 
