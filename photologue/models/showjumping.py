@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from photologue.default_settings import *
+from photologue.utils.snippets import unique_strvalue
 from taggit.managers import TaggableManager
 from video import Video
 
@@ -97,7 +98,7 @@ class Horse(GalleryImposter):
         verbose_name_plural = _('horses')
 
 class Rider(GalleryImposter):
-    name = models.CharField(_('title'), max_length=100, unique=True)
+    name = models.CharField(_('name'), max_length=100, unique=True)
     nick = models.SlugField(_('Nickname'), help_text=_('Riders nickname for archivation.'), unique=True)
     description = models.TextField(_('description'), blank=True)
     is_public = models.BooleanField(_('is public'), default=True,
@@ -154,6 +155,14 @@ class JumpingLevel(models.Model):
     def __str__(self):
         return self.__unicode__()
 
+    @property
+    def slug(self):
+        out = self.level.replace('*', '_')
+        if self.jumpoff:
+            out += "-jumpoff"
+        print out
+        return out
+
     class Meta:
         app_label=THIS_APP
         unique_together = (('level', 'jumpoff'),)
@@ -171,3 +180,22 @@ class Race(models.Model):
         app_label=THIS_APP
         verbose_name = _('race')
         verbose_name_plural = _('races')
+
+    def save(self, *args, **kwargs):
+        super(Race, self).save(*args, **kwargs)
+
+        if self.video and self.rider and self.horse and self.level:
+            title = "%(horse)s - %(rider)s - %(level)s" % dict(
+                        horse=self.horse,
+                        rider=self.rider,
+                        level=self.level,
+                    )
+            title_slug = "%(horse)s - %(rider)s - %(level)s" % dict(
+                        horse=self.horse.nick,
+                        rider=self.rider.nick,
+                        level=self.level.slug,
+                    )
+            queryset = Video.objects.all()
+            unique_strvalue(self.video, title, 'title', queryset)
+            unique_strvalue(self.video, title_slug, 'title_slug', queryset, slug=True)
+            self.video.save()
