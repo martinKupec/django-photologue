@@ -1,21 +1,11 @@
 from django import forms
 from django.http import HttpResponse
-from django.views.generic.date_based import archive_index
 from django.utils import simplejson as json
-from django.core.urlresolvers import get_callable, get_mod_func
 from django.core.exceptions import ViewDoesNotExist
+from django.views.generic.date_based import archive_index
 
 from forms import AjaxRequestForm
 from models import Photo
-from urls import photo_args, video_args
-
-view_translate = {
-    'object_list': 'media_list.html',
-    'archive_index': 'media_archive.html',
-    'archive_year': 'media_archive_year.html',
-    'archive_month': 'media_archive_month.html',
-    'archive_day': 'media_archive_day.html',
-}
 
 def media_meta(request, view, **kwargs):
     if callable(view):
@@ -74,12 +64,7 @@ def ajax_view(request):
                     })
                 return JsonResponse(photo_list)
 
-def photo_index(request):
+def ajax_archive_index(request, **kwargs):
     if request.is_ajax():
         return ajax_view(request)
-    return media_meta(request, view=archive_index, **photo_args)
-
-def video_index(request):
-    if request.is_ajax():
-        return ajax_view(request)
-    return media_meta(request, view=archive_index, **video_args)
+    return archive_index(request, **kwargs)

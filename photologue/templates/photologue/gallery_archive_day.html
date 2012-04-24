@@ -3,14 +3,14 @@
 {% load i18n %}
 {% load photologue_tags %}
 
-{% block title %}{% trans "Galleries for" %} {{ day|date }}{% endblock %}
+{% block title %}{{ model_name_plural|capfirst }} {% trans "for" %} {{ day|date }}{% endblock %}
 
 {% block content %}
 
-<h1>{% trans "Galleries for" %} {{ day|date }}</h1>
+<h1>{{ model_name_plural|capfirst }} {% trans "for" %} {{ day|date }}</h1>
 
 {% include "photologue/gallery_listing.html" with galleries=object_list %}
 
-<p><a href="{% url pl-gallery-list 1 %}">{% trans "View all galleries." %}</a></p>
+<p><a href="{% model_url 'pl-TYPE-list' model_type 1 %}">{% trans "View all" %} {{ model_name_plural|lower }}.</a></p>
 
 {% endblock %}

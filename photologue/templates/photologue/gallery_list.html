@@ -3,11 +3,11 @@
 {% load i18n %}
 {% load photologue_tags %}
 
-{% block title %}{% trans "All Galleries" %}{% endblock %}
+{% block title %}{% trans "All " %} {{ model_name_plural|lower }}{% endblock %}
 
 {% block content %}
 
-<h1>{% trans "All galleries" %}</h1>
+<h1>{% trans "All " %} {{ model_name_plural|lower }}</h1>
 
 {% include "photologue/gallery_listing.html" with galleries=object_list %}
 

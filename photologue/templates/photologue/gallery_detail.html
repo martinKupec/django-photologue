@@ -1,17 +1,21 @@
 {% extends "photologue/root.html" %}
 
 {% load i18n %}
+{% load photologue_tags %}
 
 {% block title %}{{ object.title }}{% endblock %}
 
 {% block content %}
 
 <h1>{{ object.title }}</h1>
-<h2>{% trans "Originally published" %} {{ object.date_added|date:"l, F jS, Y" }}</h2>
+{% if object.date_added %}
+	<h2>{% trans "Originally published" %} {{ object.date_added|date:"l, F jS, Y" }}</h2>
+{% endif %}
 {% if object.description %}<p>{{ object.description }}</p>{% endif %}
 <div class="pl-gallery">
     {% include "photologue/gallery_items.html" with items=object.public %}
 </div>
-<p><a href="{% url pl-gallery-list 1 %}">{% trans "View all galleries" %}</a></p>
+
+<p><a href="{% model_url 'pl-TYPE-list' model_type 1 %}">{% trans "View all" %} {{ model_name_plural|lower }}.</a></p>
 
 {% endblock %}

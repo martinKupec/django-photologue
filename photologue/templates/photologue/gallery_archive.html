@@ -3,14 +3,14 @@
 {% load i18n %}
 {% load photologue_tags %}
 
-{% block title %}{% trans "Latest Photo Galleries" %}{% endblock %}
+{% block title %}{% trans "Latest" %} {{ model_name_plural|lower }}{% endblock %}
 
 {% block content %}
 
-<h1>{% trans "Latest Photo Galleries" %}</h1>
+<h1>{% trans "Latest" %} {{ model_name_plural|lower }}</h1>
 
 {% include "photologue/gallery_listing.html" with galleries=latest %}
 
-<p><a href="{% url pl-gallery-list 1 %}">{% trans "View all galleries." %}</a></p>
+<p><a href="{% model_url 'pl-TYPE-list' model_type 1 %}">{% trans "View all" %} {{ model_name_plural|lower }}.</a></p>
 
 {% endblock %}

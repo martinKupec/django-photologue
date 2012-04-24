@@ -3,18 +3,18 @@
 {% load i18n %}
 {% load photologue_tags %}
 
-{% block title %}{% trans "Latest" %} {{ media_name_plural }}{% endblock %}
+{% block title %}{% trans "Latest" %} {{ model_name_plural|lower }}{% endblock %}
 
 {% block content %}
 
-<h1>{% trans "Latest" %} {{ media_name_plural }}</h1>
+<h1>{% trans "Latest" %} {{ model_name_plural|lower }}</h1>
 
 {% if latest %}
 	{% include "photologue/gallery_items.html" with items=latest %}
 {% else %}
-    <p>{% trans "No" %} {{ media_name_plural }} {% trans "were found." %}</p>
+    <p>{% trans "No" %} {{ model_name_plural|lower }} {% trans "were found." %}</p>
 {% endif %}
 
-<p><a href="{% media_url 'pl-TYPE-list' media_type 1 %}">{% trans "View all" %} {{ media_name_plural|lower }}.</a></p>
+<p><a href="{% model_url 'pl-TYPE-list' model_type 1 %}">{% trans "View all" %} {{ model_name_plural|lower }}.</a></p>
 
 {% endblock %}
