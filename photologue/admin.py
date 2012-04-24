@@ -225,3 +225,61 @@ admin.site.register(Watermark, WatermarkAdmin)
 admin.site.register(Video, VideoAdmin)
 admin.site.register(VideoSize, VideoSizeAdmin)
 admin.site.register(VideoConvert, VideoConvertAdmin)
+
+from django.core.urlresolvers import reverse
+
+class TaggedAdmin(admin.ModelAdmin):
+    def the_tags(self, obj):
+        return ", ".join(map(lambda x: x.name, obj.tags.all()))
+    the_tags.short_description = _('Tags')
+
+    def gallery(self, obj):
+        return u'<a href="%s">%s</a>' % (obj.get_absolute_url(), _('gallery'))
+    gallery.short_description = _('Gallery')
+    gallery.allow_tags = True
+
+class HorseAdmin(TaggedAdmin):
+    list_display = ('name', 'the_tags', 'item_count', 'is_public', 'last_modified', 'gallery')
+    list_filter = ['is_public', 'last_modified']
+    prepopulated_fields = {'nick': ('name',)}
+
+class RiderAdmin(TaggedAdmin):
+    list_display = ('name', 'the_tags', 'item_count', 'is_public', 'last_modified', 'gallery')
+    list_filter = ['is_public', 'last_modified']
+    prepopulated_fields = {'nick': ('name',)}
+
+
+class EventAdmin(TaggedAdmin):
+    list_display = ('venue', 'day_start', 'day_end', 'the_tags', 'item_count', 'is_public', 'gallery')
+    list_filter = ['is_public', 'day_start']
+    prepopulated_fields = {'venue_slug': ('venue',)}
+
+class JumpingLevelAdmin(admin.ModelAdmin):
+    list_display = ('level', 'jumpoff')
+
+class RaceFormAdmin(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(RaceFormAdmin, self).__init__(*args, **kwargs)
+        self.fields['video'].queryset = Video.objects.exclude(pk__in=Race.objects.exclude(id=self.instance.id).values('video'))
+
+class RaceAdmin(admin.ModelAdmin):
+    form = RaceFormAdmin
+
+    list_display = ('video', 'rider', 'horse', 'level', 'event', 'admin_thumbnail')
+    list_filter = ['rider', 'horse', 'level', 'event']
+    list_editable = ['rider', 'horse', 'level', 'event']
+    search_fields = ['video']
+
+    def admin_thumbnail(self, obj):
+        thumb = obj.video.admin_thumbnail();
+        if obj.video:
+            thumb += '<b> <a href="%s">Video admin</a></b>' % reverse('admin:photologue_video_change', args=(obj.video.id,))
+        return thumb
+    admin_thumbnail.short_description = _('Thumbnail')
+    admin_thumbnail.allow_tags = True
+
+admin.site.register(Horse, HorseAdmin)
+admin.site.register(Rider, RiderAdmin)
+admin.site.register(Event, EventAdmin)
+admin.site.register(JumpingLevel, JumpingLevelAdmin)
+admin.site.register(Race, RaceAdmin)

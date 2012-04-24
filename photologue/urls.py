@@ -69,3 +69,8 @@ def gen_patterns(prefix, date_field, slug_field, model, template, common_detail)
 urlpatterns = gen_patterns('gallery', 'date_added', 'title_slug', Gallery, u'gallery', True)
 urlpatterns += gen_patterns('photo', 'date_added', 'title_slug', Photo, u'media', False)
 urlpatterns += gen_patterns('video', 'date_added', 'title_slug', Video, u'media', False)
+
+#showjumping
+urlpatterns += gen_patterns('horse', 'last_modified', 'nick', Horse, u'gallery', True)
+urlpatterns += gen_patterns('rider', 'last_modified', 'nick', Rider, u'gallery', True)
+urlpatterns += gen_patterns('event', 'day_start', 'venue_slug', Event, u'gallery', True)

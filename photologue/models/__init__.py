@@ -8,6 +8,7 @@ from gallery import *
 from image import *
 from photo import *
 from video import *
+from showjumping import *
 
 from django.db.models.signals import post_init
 
