@@ -142,7 +142,7 @@ def convertvideo_mp4(video_in, video_out, video_data):
         if not video_data['audiobitrate']:
             audio_pass2 = audio_pass1
         else:
-            audio_pass2 = ('-acodec %(acodec)s -b:a %(ab)dk '
+            audio_pass2 = ('-acodec %(acodec)s -ar 44100 -b:a %(ab)dk '
                           ) % dict(
                             acodec=AUDIO_AAC,
                             ab=video_data['audiobitrate'],
@@ -252,7 +252,7 @@ def convertvideo_webm(video_in, video_out, video_data):
         if not video_data['audiobitrate']:
             audio_pass2 = audio_pass1
         else:
-            audio_pass2 = ('-codec:a %(acodec)s -b:a %(ab)dk '
+            audio_pass2 = ('-codec:a %(acodec)s -ar 44100 -b:a %(ab)dk '
                           ) % dict(
                             acodec=AUDIO_OGG,
                             ab=video_data['audiobitrate'],
