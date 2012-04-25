@@ -7,6 +7,7 @@ from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
 
 FFMPEG = getattr(settings, 'PHOTOLOGUE_FFMPEG', 'ffmpeg')
+QTFAST = getattr(settings, 'PHOTOLOGUE_QTFAST', 'qt-faststart')
 FLVTOOL = getattr(settings, 'PHOTOLOGUE_FLVTOOL', 'flvtool2')
 #AUDIO_AAC = getattr(settins, 'PHOTOLOGUE_AUDIO_AAC', 'libvo_aacenc')
 AUDIO_AAC = getattr(settings, 'PHOTOLOGUE_AUDIO_AAC', 'libfaac -ac 2')
@@ -189,6 +190,20 @@ def convertvideo_mp4(video_in, video_out, video_data):
         if retval:
             raise Exception('MP4 creation have failed(final pass)\n\n' + output)
     
+        # Move moov to start
+        tmp = video_out + '_fast'
+        qtfast = '%(qtfast)s %(source)s %(tmp)s' % dict(
+                        qtfast=QTFAST,
+                        source=video_out,
+                        tmp=tmp,
+                        )
+        header = "------------- QT-FASTSTART : MP4  -------------"
+        (message, retval) = execute(qtfast, header)
+        output += message
+        if retval:
+            raise Exception('QT-FASTSTART failed\n\n' + output)
+        os.rename(tmp, video_out)
+        
         s = os.stat(video_out)
         fsize = s.st_size
         if (fsize == 0):
