@@ -2,8 +2,6 @@ import os
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from django.core.files.base import File
-from django.core.files.storage import FileSystemStorage
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now, is_aware, make_aware, get_current_timezone
 from django.template.defaultfilters import slugify
@@ -11,6 +9,7 @@ from django.template.defaultfilters import slugify
 from photologue.models import MediaSize, MediaModel, GalleryItemBase, Video, Photo
 from photologue.default_settings import *
 from photologue.utils.video import video_sizes
+from photologue.utils.upload import move_file
 
 try:
     import Image
@@ -28,14 +27,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         return refresh_media()
-
-class TemporaryFile(File):
-    def temporary_file_path(self):
-        return self.file.name
-
-class OverrideStorage(FileSystemStorage):
-    def get_available_name(self, name):
-        return name
 
 def refresh_media():
     """
@@ -101,13 +92,9 @@ def refresh_media():
                     else:
                         raise Exception("Unknown file type")
 
-                    file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
-                    prefix = os.path.commonprefix([file_root , full])
-                    url = full[len(prefix):]
+                    # This will just update path in file entry 
+                    move_file(item, full, full)
 
-                    item.file.storage.__class__ = OverrideStorage
-                    item.file.save(url, TemporaryFile(open(full, 'rb')), save=False)
-                    item.save()
                     if abs(item.date_taken - item.date_added) < timedelta(seconds=3):
                         item.date_taken = date_taken
                         item.save()

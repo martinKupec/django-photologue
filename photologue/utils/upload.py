@@ -1,13 +1,17 @@
 import os
 from datetime import timedelta
 from cStringIO import StringIO
+from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files.base import ContentFile, File
+from django.core.files.storage import FileSystemStorage
+from django.core.files.base import File
 from django.utils.timezone import make_aware, get_current_timezone
 from django.template.defaultfilters import slugify
 from photologue.utils.video import video_sizes
 from photologue.utils.libmc import get_moi_details, set_mpg_dar
 from photologue.models import Photo, Video, GalleryItemBase
+from photologue.default_settings import *
 
 try:
     import Image
@@ -136,3 +140,23 @@ def upload_file(name, original_name, content, date_taken=None, retrieve_another=
             break
         count = count + 1
     return count
+
+class TemporaryFile(File):
+    def temporary_file_path(self):
+        # This is needed. When we move the file, this will not exist and
+        # django will complain
+        self._size = os.path.getsize(self.file.name)
+        return self.file.name
+
+class OverrideStorage(FileSystemStorage):
+    def get_available_name(self, name):
+        return name
+
+def move_file(item, orig, to):
+    file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
+    prefix = os.path.commonprefix([file_root , to])
+    url = to[len(prefix):]
+
+    item.file.storage.__class__ = OverrideStorage
+    # This also saves the entry
+    item.file.save(url, TemporaryFile(open(orig, 'rb')))

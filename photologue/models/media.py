@@ -76,8 +76,6 @@ class MediaModel(models.Model):
                     ok = True
             if not ok:
                 continue
-            #if not hasattr(self, related_model):
-            #    continue
             setattr(self, 'get_%s_size' % size.name,
                     curry(self._get_SIZE_size, size=size.name))
             setattr(self, 'get_%s_mediasize' % size.name,
@@ -160,7 +158,10 @@ class MediaModel(models.Model):
     def delete(self):
         assert self._get_pk_val() is not None, "%s object can't be deleted because its %s attribute is set to None." % (self._meta.object_name, self._meta.pk.attname)
         self.clear_cache()
-        os.remove(self.file.path)
+        try:
+            os.remove(self.file.path)
+        except:
+            pass
         super(MediaModel, self).delete()
 
 class MediaOverride(MediaModel):
