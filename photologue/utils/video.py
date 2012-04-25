@@ -240,7 +240,7 @@ def convertvideo_webm(video_in, video_out, video_data):
 
     output = ""
     try:
-        common_options = ('-codec:v libvpx -quality good -cpu-used 0 -b:v %(vb)dk -qmin 10 -qmax 42 '
+        common_options = ('-codec:v libvpx -vpre libvpx-360p -quality good -cpu-used 0 -b:v %(vb)dk -qmin 10 -qmax 42 '
                           '-maxrate %(vb)dk -bufsize %(bfs)dk -threads 2 %(letterboxing)s -vf scale=%(size)s '
                         ) % dict(
                             vb=video_data['videobitrate'],
