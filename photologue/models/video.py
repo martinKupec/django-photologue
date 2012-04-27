@@ -74,15 +74,18 @@ class VideoModel(MediaModel):
                 if not is_aware(date):
                     date = make_aware(date, get_current_timezone())
                 self.date_taken = date
+        # Add attribute if missing - we need it here
+        prevent_cache_clear = getattr(self, 'prevent_cache_clear', False)
         try:
             orig = VideoModel.objects.get(pk=self.pk)
             if orig.file == self.file:
                 self.prevent_cache_clear = True
-            else:
+            elif not prevent_cache_clear:
                 if self.poster and not poster_unconverted(self.poster):
-                    self.poster.delete()
-                    self.poster = None
-                self.prevent_cache_clear = False
+                    # Change the file path
+                    self.poster.file = DEFAULT_POSTER_PATH
+                    # Save new poster - this will delete old poster and clear cache
+                    self.poster.save()
                 self.view_count = 0
         except VideoModel.DoesNotExist:
             pass
@@ -91,7 +94,9 @@ class VideoModel(MediaModel):
         super(VideoModel, self).save(*args, **kwargs)
     
     def delete(self):
-        if self.poster and not poster_unconverted(self.poster):
+        if self.poster:
+            if poster_unconverted(self.poster):
+                self.prevent_delete = True
             self.poster.delete()
         super(VideoModel, self).delete()
 

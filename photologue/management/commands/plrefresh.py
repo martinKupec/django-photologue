@@ -94,6 +94,7 @@ def refresh_media():
 
                     # This will just update path in file entry 
                     move_file(item, full, full)
+                    item.save()
 
                     if abs(item.date_taken - item.date_added) < timedelta(seconds=3):
                         item.date_taken = date_taken

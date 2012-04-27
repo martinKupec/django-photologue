@@ -78,6 +78,11 @@ def video_create_poster(videopath, poster, video_data):
     name = name+'.png'
     # Save
     poster.file.save(name, File(thumbnailfile))
+
+    # Import poster_unconverted here
+    from photologue.models.video import poster_unconverted
+    if poster_unconverted(poster):
+        poster.prevent_delete = True
     poster.save()
     return output
 

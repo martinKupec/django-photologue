@@ -26,7 +26,11 @@ class Command(BaseCommand):
         return update_files()
 
 def update_item(item, newname):
+        file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
         path = item.file.path
+        if not os.path.exists(path):
+            print item.title, ": files doesn't exist: ", path
+            return
         root, name = os.path.split(path)
         base, ext = os.path.splitext(name)
         renamed = os.path.join(root, u'%s%s' % (newname, ext))
@@ -36,17 +40,20 @@ def update_item(item, newname):
             func = getattr(item, "get_%s_filename" % size.name, None)
             if func:
                 sizename = func()
-                if os.path.exists(sizename) and sizename.startswith(settings.MEDIA_ROOT):
-                    cache[func] = func()
+                if os.path.exists(sizename) and sizename.startswith(file_root):
+                    cache[func] = sizename
 
-        # No need to regenerate caches
-        item.prevent_cache_clear = True
         # Do the move and save
         move_file(item, path, renamed)
+        # No need to regenerate caches
+        item.prevent_cache_clear = True
+        item.prevent_delete = True
+        item.save()
 
         for key, value in cache.items():
-            print key(), value
-            file_move_safe(value, key())
+            target = key()
+            if not target.endswith('unconverted') and os.path.exists(value):
+                file_move_safe(value, target)
 
         taken = item.date_taken
         taken = taken.astimezone(get_current_timezone())

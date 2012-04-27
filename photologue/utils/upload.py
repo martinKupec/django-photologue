@@ -150,7 +150,10 @@ class TemporaryFile(File):
 
 class OverrideStorage(FileSystemStorage):
     def get_available_name(self, name):
-        return name
+        full = os.path.join(settings.MEDIA_ROOT, name)
+        if full == self.orig:
+            return name
+        return super(OverrideStorage, self).get_available_name(name)
 
 def move_file(item, orig, to):
     file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
@@ -158,5 +161,5 @@ def move_file(item, orig, to):
     url = to[len(prefix):]
 
     item.file.storage.__class__ = OverrideStorage
-    # This also saves the entry
-    item.file.save(url, TemporaryFile(open(orig, 'rb')))
+    item.file.storage.orig = orig
+    item.file.save(url, TemporaryFile(open(orig, 'rb')), save=False)

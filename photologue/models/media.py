@@ -125,11 +125,10 @@ class MediaModel(models.Model):
             self.remove_cache_dirs()
 
     def clear_cache(self):
-        try:
-            if self.prevent_cache_clear:
-                return
-        except:
-            pass
+        # Sometimes we need not to clear caches when changing files
+        prevent_cache_clear = getattr(self, 'prevent_cache_clear', False)
+        if prevent_cache_clear:
+            return
         cache = MediaSizeCache()
         for mediasize in cache.sizes.values():
             self.remove_size(mediasize, False)
@@ -151,7 +150,16 @@ class MediaModel(models.Model):
         if self.date_taken is None:
             self.date_taken = now()
         if self._get_pk_val():
-            self.clear_cache()
+            prevent_delete = getattr(self, 'prevent_delete', False)
+            orig = MediaModel.objects.get(pk=self.pk)
+            if not prevent_delete and orig.file.path != self.file.path:
+                # Try deleting original video
+                try:
+                    os.remove(orig.file.path)
+                except:
+                    pass
+                orig.prevent_cache_clear = getattr(self, 'prevent_cache_clear', False)
+                orig.clear_cache()
         super(MediaModel, self).save(*args, **kwargs)
         self.pre_cache()
 
