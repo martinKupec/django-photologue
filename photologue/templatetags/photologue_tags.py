@@ -2,6 +2,7 @@ from django.core.urlresolvers import reverse
 from django import template
 
 from photologue.models import Photo, Video, VideoSize
+from photologue.utils.snippets import format_date_range
 
 register = template.Library()
 
@@ -47,3 +48,19 @@ def video_downloads(video, size_pattern):
             if url:
                 sources += "<a href=\"" + url + "\">" + size.videotype + "</a>\n"
     return sources
+
+
+from photologue.models import Race
+
+@register.simple_tag
+def race_event(video):
+    race = Race.objects.get(video=video)
+    if not race:
+        return ""
+    event = race.event
+    if not event:
+        return ""
+    out = format_date_range(event.day_start, event.day_end)
+    out += " - " + event.venue
+    out += " - " + race.video.date_taken.strftime("%A")
+    return out

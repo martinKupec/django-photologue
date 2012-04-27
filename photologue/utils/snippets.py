@@ -75,3 +75,25 @@ def _str_strip(value, separator='-'):
             re_sep = re.escape(separator)
         value = re.sub(r'^%s+|%s+$' % (re_sep, re_sep), '', value)
     return value
+
+# Snippet 1405 - modified
+def format_date_range(from_date, to_date):
+    """
+    >>> import datetime
+    >>> format_date_range(datetime.date(2009,1,15), datetime.date(2009,1,20))
+    '15. - 20.01.2009.'
+    >>> format_date_range(datetime.date(2009,1,15), datetime.date(2009,2,20))
+    '15.01. - 20.02.2009.'
+    >>> format_date_range(datetime.date(2009,1,15), datetime.date(2010,2,20))
+    '15.01.2009. - 20.02.2010.'
+    >>> format_date_range(datetime.date(2009,1,15), datetime.date(2010,1,20))
+    '15.01.2009. - 20.01.2010.'
+    """
+    from_format = to_format = '%d.%m.%Y'
+    if from_date == to_date:
+        return from_date.strftime(from_format)
+    if (from_date.year == to_date.year):
+        from_format = from_format.replace('%Y', '')
+        if (from_date.month == to_date.month):
+            from_format = from_format.replace('%m.', '')
+    return " - ".join((from_date.strftime(from_format), to_date.strftime(to_format), ))
