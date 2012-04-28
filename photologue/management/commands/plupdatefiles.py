@@ -47,7 +47,7 @@ def update_item(item, newname):
         move_file(item, path, renamed)
         # No need to regenerate caches
         item.prevent_cache_clear = True
-        item.prevent_delete = True
+        item.remove_deleted = False
         item.save()
 
         for key, value in cache.items():

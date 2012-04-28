@@ -82,7 +82,7 @@ def video_create_poster(videopath, poster, video_data):
     # Import poster_unconverted here
     from photologue.models.video import poster_unconverted
     if poster_unconverted(poster):
-        poster.prevent_delete = True
+        poster.remove_deleted = False
     poster.save()
     return output
 

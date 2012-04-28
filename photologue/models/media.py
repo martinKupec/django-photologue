@@ -150,9 +150,9 @@ class MediaModel(models.Model):
         if self.date_taken is None:
             self.date_taken = now()
         if self._get_pk_val():
-            prevent_delete = getattr(self, 'prevent_delete', False)
+            remove_deleted = getattr(self, 'remove_deleted', PHOTOLOGUE_REMOVE_DELETED)
             orig = MediaModel.objects.get(pk=self.pk)
-            if not prevent_delete and orig.file.path != self.file.path:
+            if remove_deleted and orig.file.path != self.file.path:
                 # Try deleting original video
                 try:
                     os.remove(orig.file.path)
@@ -166,8 +166,10 @@ class MediaModel(models.Model):
     def delete(self):
         assert self._get_pk_val() is not None, "%s object can't be deleted because its %s attribute is set to None." % (self._meta.object_name, self._meta.pk.attname)
         self.clear_cache()
+        remove_deleted = getattr(self, 'remove_deleted', PHOTOLOGUE_REMOVE_DELETED)
         try:
-            os.remove(self.file.path)
+            if remove_deleted:
+                os.remove(self.file.path)
         except:
             pass
         super(MediaModel, self).delete()

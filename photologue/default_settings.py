@@ -23,6 +23,9 @@ MAXBLOCK = getattr(settings, 'PHOTOLOGUE_MAXBLOCK', 256 * 2 ** 10)
 # Photologue media path relative to media root
 PHOTOLOGUE_DIR = getattr(settings, 'PHOTOLOGUE_DIR', 'photologue')
 
+# Should we delete files without a database entry?
+PHOTOLOGUE_REMOVE_DELETED = getattr(settings, 'PHOTOLOGUE_REMOVE_DELETED', True)
+
 # Look for user function to define file paths
 PHOTOLOGUE_PATH = getattr(settings, 'PHOTOLOGUE_PATH', None)
 if PHOTOLOGUE_PATH is not None:

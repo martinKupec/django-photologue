@@ -95,10 +95,18 @@ class VideoModel(MediaModel):
     
     def delete(self):
         if self.poster:
-            if poster_unconverted(self.poster):
-                self.prevent_delete = True
-            self.poster.delete()
+            poster = self.poster
+        else:
+            poster = False
+        # Delete the video first
+        # We need to do it this way,
+        # as poster cascades deletion to video
         super(VideoModel, self).delete()
+        # Now delete poster if needed
+        if poster:
+            if poster_unconverted(poster):
+                poster.remove_deleted = False
+            poster.delete()
 
     def convertion_unfinished(self):
         return VideoConvert.objects.filter(video=self, converted=False).exists()
