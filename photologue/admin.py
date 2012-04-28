@@ -227,6 +227,9 @@ admin.site.register(VideoSize, VideoSizeAdmin)
 admin.site.register(VideoConvert, VideoConvertAdmin)
 
 from django.core.urlresolvers import reverse
+from photologue.management.commands.plcleanup import cleanup_videos
+from cStringIO import StringIO
+import sys
 
 class TaggedAdmin(admin.ModelAdmin):
     def the_tags(self, obj):
@@ -278,8 +281,41 @@ class RaceAdmin(admin.ModelAdmin):
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
 
+class NonRaceVideo(Video):
+    class Meta:
+        proxy = True
+        verbose_name = _("Non race video")
+        verbose_name_plural = _("Non race videos")
+
+class NonRaceVideoAdmin(VideoAdmin):
+    actions = ['erase', 'private']
+
+    def queryset(self, request):
+        return NonRaceVideo.objects.exclude(id__in=Race.objects.values('video'))
+
+    def erase(self, request, changelist):
+        self.cleanup(request, changelist, 'erase')
+    erase.short_description = _("Erase")
+
+    def private(self, request, changelist):
+        self.cleanup(request, changelist, 'private')
+    private.short_description = _("Move to private")
+
+    def cleanup(self, request, changelist, how):
+        queue = []
+        for item in changelist:
+            queue.append((item, how))
+        old_stdout = sys.stdout
+        sys.stdout = redirect = StringIO()
+        cleanup_videos(queue)
+        sys.stdout = old_stdout
+        redirect.seek(0)
+        for line in redirect:
+            self.message_user(request, line)
+
 admin.site.register(Horse, HorseAdmin)
 admin.site.register(Rider, RiderAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(JumpingLevel, JumpingLevelAdmin)
 admin.site.register(Race, RaceAdmin)
+admin.site.register(NonRaceVideo, NonRaceVideoAdmin)
