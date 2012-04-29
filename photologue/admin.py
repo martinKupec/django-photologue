@@ -61,7 +61,7 @@ class PhotoAdmin(GalleryItemModelAdmin):
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
-    list_per_page = 10
+    list_per_page = 50
     prepopulated_fields = {'title_slug': ('title',)}
     add_exclude = ('date_taken', )
     edit_exclude = ()
@@ -93,7 +93,7 @@ class VideoAdmin(GalleryItemModelAdmin):
     list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
-    list_per_page = 10
+    list_per_page = 50
     prepopulated_fields = {'title_slug': ('title',)}
     add_exclude = ('poster', 'crop_from', 'date_taken')
     edit_exclude = ('poster', 'crop_from', )
@@ -112,7 +112,8 @@ class VideoConvertAdmin(admin.ModelAdmin):
     list_filter = ['videosize', 'converted']
     exclude = ('time',)
     search_fields = ['video']
-    list_per_page = 10
+    list_per_page = 100
+    list_max_show_all = 600
 
     def the_time(self, convert):
         return str(timedelta(seconds=convert.time))
