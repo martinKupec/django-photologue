@@ -36,7 +36,7 @@ def refresh_media():
     itemized = map(lambda o: o.file.path, MediaModel.objects.all())
 
     my_root = os.path.join(settings.MEDIA_ROOT, PHOTOLOGUE_DIR)
-    for root, dirs, files in os.walk(my_root):
+    for root, dirs, files in os.walk(my_root, followlinks=True):
         # First filter out cache directories
         try:
             dirs.remove('cache')
@@ -99,5 +99,6 @@ def refresh_media():
                     if abs(item.date_taken - item.date_added) < timedelta(seconds=3):
                         item.date_taken = date_taken
                         item.save()
+                    print "Added ", item.title, " - ", item.date_taken
                     break
                 count = count + 1
