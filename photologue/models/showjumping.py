@@ -8,12 +8,6 @@ from taggit.managers import TaggableManager
 from video import Video
 
 class GalleryImposter(models.Model):
-
-    @property
-    def items(self):
-        video_ids = self.race_set.values_list('video_id', flat=True)
-        return Video.objects.filter(id__in=video_ids)
-    
     class Meta:
         abstract = True
         app_label=THIS_APP
@@ -75,7 +69,17 @@ class GalleryImposter(models.Model):
     def public(self):
         return self.items.filter(is_public=True)
 
-class Horse(GalleryImposter):
+class RaceGalleryImposter(GalleryImposter):
+    @property
+    def items(self):
+        video_ids = self.race_set.values_list('video_id', flat=True)
+        return Video.objects.filter(id__in=video_ids)
+
+    class Meta:
+        abstract = True
+        app_label=THIS_APP
+
+class Horse(RaceGalleryImposter):
     name = models.CharField(_('name'), max_length=100, unique=True)
     nick = models.SlugField(_('Nickname'), help_text=_('Horse nickname for archivation.'), unique=True)
     description = models.TextField(_('description'), blank=True)
@@ -97,7 +101,7 @@ class Horse(GalleryImposter):
         verbose_name = _('horse')
         verbose_name_plural = _('horses')
 
-class Rider(GalleryImposter):
+class Rider(RaceGalleryImposter):
     name = models.CharField(_('name'), max_length=100, unique=True)
     nick = models.SlugField(_('Nickname'), help_text=_('Riders nickname for archivation.'), unique=True)
     description = models.TextField(_('description'), blank=True)
@@ -119,17 +123,19 @@ class Rider(GalleryImposter):
         verbose_name = _('rider')
         verbose_name_plural = _('riders')
 
-class Event(GalleryImposter):
-    venue = models.CharField(_('venue'), max_length=100)
+class Venue(GalleryImposter):
+    venue = models.CharField(_('venue'), max_length=100, unique=True)
     venue_slug = models.SlugField(_('venue slug'), unique=True,
                                   help_text=_('A "slug" is a unique URL-friendly title for an object.'))
-    day_start = models.DateField(_('first day'))
-    day_end = models.DateField(_('last day'))
-
     description = models.TextField(_('description'), blank=True)
     is_public = models.BooleanField(_('is public'), default=True,
                                     help_text=_('Public galleries will be displayed in the default views.'))
     tags = TaggableManager(blank=True)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    @property
+    def items(self):
+        return self.event_set
 
     @property
     def title(self):
@@ -138,6 +144,34 @@ class Event(GalleryImposter):
     @property
     def title_slug(self):
         return self.venue_slug
+
+    class Meta:
+        app_label=THIS_APP
+        verbose_name = _('venue')
+        verbose_name_plural = _('venues')
+
+class Event(RaceGalleryImposter):
+    name = models.CharField(_('name'), max_length=100)
+    name_slug = models.CharField(_('name slug'), max_length=100)
+    venue = models.ForeignKey(Venue, verbose_name=_('venue'), null=False, blank=False)
+    day_start = models.DateField(_('first day'))
+    day_end = models.DateField(_('last day'))
+
+    description = models.TextField(_('description'), blank=True)
+    is_public = models.BooleanField(_('is public'), default=True,
+                                    help_text=_('Public galleries will be displayed in the default views.'))
+    tags = TaggableManager(blank=True)
+
+    def get_absolute_url(self):
+        return reverse('pl-event', args=[self.name_slug])
+
+    @property
+    def title(self):
+        return self.name + ", " + self.venue.title
+
+    @property
+    def title_slug(self):
+        return self.name_slug + "__" + self.venue.title_slug
 
     class Meta:
         app_label=THIS_APP

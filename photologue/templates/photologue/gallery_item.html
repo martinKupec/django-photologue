@@ -3,7 +3,7 @@
 <div class="pl-gallery-item">
     <div class="pl-gallery-{{ item.type }}">
 {% endif %}
-    <a href="{{ item.get_absolute_url }}"><img src="{{ item.get_thumbnail_url }}" alt="{{ item.title }}"  title="{{ item.title }}"/></a>
+	<a href="{{ item.get_absolute_url }}">{% if item.get_thumbnail_url %}<img src="{{ item.get_thumbnail_url }}" alt="{{ item.title }}"  title="{{ item.title }}"/>{% else %}{{ item.title }}{% endif %}</a>
 {% if not nodiv %}
     </div>
 </div>
