@@ -252,10 +252,15 @@ class RiderAdmin(TaggedAdmin):
     prepopulated_fields = {'nick': ('name',)}
 
 
-class EventAdmin(TaggedAdmin):
-    list_display = ('venue', 'day_start', 'day_end', 'the_tags', 'item_count', 'is_public', 'gallery')
-    list_filter = ['is_public', 'day_start']
+class VenueAdmin(TaggedAdmin):
+    list_display = ('venue', 'venue_slug', 'the_tags', 'item_count', 'is_public', 'gallery')
+    list_filter = ['is_public']
     prepopulated_fields = {'venue_slug': ('venue',)}
+
+class EventAdmin(TaggedAdmin):
+    list_display = ('name', 'venue', 'day_start', 'day_end', 'the_tags', 'item_count', 'is_public', 'gallery')
+    list_filter = ['is_public', 'day_start']
+    prepopulated_fields = {'name_slug': ('name',)}
 
 class JumpingLevelAdmin(admin.ModelAdmin):
     list_display = ('level', 'jumpoff')
@@ -315,6 +320,7 @@ class NonRaceVideoAdmin(VideoAdmin):
 
 admin.site.register(Horse, HorseAdmin)
 admin.site.register(Rider, RiderAdmin)
+admin.site.register(Venue, VenueAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(JumpingLevel, JumpingLevelAdmin)
 admin.site.register(Race, RaceAdmin)

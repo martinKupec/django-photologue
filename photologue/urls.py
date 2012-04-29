@@ -73,4 +73,5 @@ urlpatterns += gen_patterns('video', 'date_added', 'title_slug', Video, u'media'
 #showjumping
 urlpatterns += gen_patterns('horse', 'last_modified', 'nick', Horse, u'gallery', True)
 urlpatterns += gen_patterns('rider', 'last_modified', 'nick', Rider, u'gallery', True)
-urlpatterns += gen_patterns('event', 'day_start', 'venue_slug', Event, u'gallery', True)
+urlpatterns += gen_patterns('event', 'day_start', 'name_slug', Event, u'gallery', True)
+urlpatterns += gen_patterns('venue', 'last_modified', 'venue_slug', Venue, u'gallery', True)
