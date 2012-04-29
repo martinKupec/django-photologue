@@ -6,7 +6,7 @@ from photologue.default_settings import *
 from image import ImageModel
 from gallery import GalleryItemBase
 
-class Photo(ImageModel, GalleryItemBase):
+class Photo(GalleryItemBase, ImageModel):
     class Meta:
         app_label=THIS_APP
         verbose_name = _("photo")

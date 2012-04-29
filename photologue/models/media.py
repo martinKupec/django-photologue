@@ -19,6 +19,16 @@ class MediaModel(models.Model):
     class Meta:
         app_label=THIS_APP
 
+    def __unicode__(self):
+        path = get_storage_path(self, '')
+        if self.file.name.startswith(path):
+            return unicode(self.file.name[len(path):])
+        else:
+            return unicode(self.file.name)
+
+    def __str__(self):
+        return self.__unicode__()
+
     def admin_thumbnail(self, dest_url=None):
         func = getattr(self, 'get_admin_thumbnail_url', None)
         if func is None:

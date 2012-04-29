@@ -216,7 +216,7 @@ class VideoConvert(models.Model):
     def __unicode__(self):
         return unicode(self.video)
 
-class Video(VideoModel, GalleryItemBase):
+class Video(GalleryItemBase, VideoModel):
     class Meta:
         app_label=THIS_APP
         verbose_name = _("video")
