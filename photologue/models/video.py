@@ -212,6 +212,7 @@ class VideoConvert(models.Model):
 
     class Meta:
         app_label=THIS_APP
+        ordering = ['-video__date_taken']
 
     def __unicode__(self):
         return unicode(self.video)
@@ -221,6 +222,7 @@ class Video(GalleryItemBase, VideoModel):
         app_label=THIS_APP
         verbose_name = _("video")
         verbose_name_plural = _("videos")
+        ordering = ['-date_taken']
 
     def save(self, *args, **kwargs):
         if self.date_taken is None:

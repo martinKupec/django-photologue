@@ -19,12 +19,13 @@ class Command(BaseCommand):
 
 def should_convert_poster(video):
     if poster_unconverted(video.poster):
-        return True;
+        return True
+    if not os.path.exists(video.poster.file.path):
+        return True
     for size in MediaSizeCache().sizes.values():
         related_model = type(size).__name__.split('.')[-1].lower().replace('size', 'model')
         if related_model == 'videomodel':
             path = getattr(video, 'get_%s_filename' % size)()
-            print path,
             if os.path.exists(path):
                 return False
     return True

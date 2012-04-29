@@ -49,15 +49,15 @@ def execute(command, header):
     return (msg, child.returncode)
 
 def video_create_poster(videopath, poster, video_data):
-    ''' Grab a PNG snapshot of the video
+    ''' Grab a JPEG snapshot of the video
     '''
 
     output = ""
     w,h,aspect = video_sizes(videopath)
-    thumbnailfile = NamedTemporaryFile(suffix='.png')
+    thumbnailfile = NamedTemporaryFile(suffix='.jpg')
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
                     '-vframes 1 -ss %(postertime)s -an '
-                    '-vcodec png -f rawvideo '
+                    '-vcodec mjpeg -f rawvideo '
                     '-s %(size)s %(outfile)s'
                     ) % dict(
                         ffmpeg=FFMPEG,
@@ -83,7 +83,7 @@ def video_create_poster(videopath, poster, video_data):
     dot = name.rfind('.')
     if dot != -1:
         name = name[:dot]
-    name = os.path.join("poster", name+'.png')
+    name = os.path.join("poster", name+'.jpg')
     # Save
     poster.file.save(name, File(thumbnailfile))
 
