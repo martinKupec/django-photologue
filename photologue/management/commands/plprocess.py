@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from photologue.models import VideoConvert, poster_unconverted
+from photologue.models import VideoConvert, poster_unconverted, MediaSizeCache
 from photologue.utils.video import *
 from photologue.default_settings import *
 
@@ -16,6 +16,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         return process_files(*args)
+
+def should_convert_poster(video):
+    if poster_unconverted(video.poster):
+        return True;
+    for size in MediaSizeCache().sizes.values():
+        related_model = type(size).__name__.split('.')[-1].lower().replace('size', 'model')
+        if related_model == 'videomodel':
+            path = getattr(video, 'get_%s_filename' % size)()
+            print path,
+            if os.path.exists(path):
+                return False
+    return True
 
 def process_files(select=None):
     """
@@ -76,7 +88,7 @@ def process_files(select=None):
 
         # Create poster
         try:
-            if convert.video.poster and poster_unconverted(convert.video.poster):
+            if convert.video.poster and should_convert_poster(convert.video):
                 convert.message = video_create_poster(filepath, convert.video.poster, video_data)
         except Exception, e:
             print e

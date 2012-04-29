@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
+from photologue.default_settings import *
 
 FFMPEG = getattr(settings, 'PHOTOLOGUE_FFMPEG', 'ffmpeg')
 QTFAST = getattr(settings, 'PHOTOLOGUE_QTFAST', 'qt-faststart')
@@ -43,7 +44,7 @@ def execute(command, header):
     msg = header + "\n"
     msg += "Command: %s\n" % command
     msg += reduce(lambda i, s: i + s + "\n", child.stdout.readlines(), "")
-    msg += "Returncode: %d" % (child.returncode if child.returncode else 0)
+    msg += "Returncode: %d\n" % (child.returncode if child.returncode else 0)
 
     return (msg, child.returncode)
 
@@ -55,12 +56,13 @@ def video_create_poster(videopath, poster, video_data):
     w,h,aspect = video_sizes(videopath)
     thumbnailfile = NamedTemporaryFile(suffix='.png')
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
-                    '-vframes 1 -ss 00:00:10 -an '
+                    '-vframes 1 -ss %(postertime)s -an '
                     '-vcodec png -f rawvideo '
                     '-s %(size)s %(outfile)s'
                     ) % dict(
                         ffmpeg=FFMPEG,
                         infile=videopath,
+                        postertime=PHOTOLOGUE_POSTER_TIME,
                         outfile=thumbnailfile.name,
                         size="%dx%d" % (w, h)
                     )
@@ -70,12 +72,18 @@ def video_create_poster(videopath, poster, video_data):
     if retval:
         raise Exception('Creating poster have failed\n\n' + output)
 
+    s = os.stat(thumbnailfile.name)
+    fsize = s.st_size
+    if (fsize == 0):
+        output += "Target file is 0 bytes conversion failed?\n"
+        raise Exception('Poster creation have failed(file zero size)\n\n' + output)
+
     # Replace part after last dot by 'png'
     name = os.path.basename(videopath)
     dot = name.rfind('.')
     if dot != -1:
         name = name[:dot]
-    name = name+'.png'
+    name = os.path.join("poster", name+'.png')
     # Save
     poster.file.save(name, File(thumbnailfile))
 

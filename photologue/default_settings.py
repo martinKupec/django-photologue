@@ -43,6 +43,9 @@ else:
 # Path to default video poster
 DEFAULT_POSTER_PATH = getattr(settings, 'POSTER_PATH', os.path.join('res', 'sample.jpg'))
 
+# Should we delete files without a database entry?
+PHOTOLOGUE_POSTER_TIME = getattr(settings, 'PHOTOLOGUE_POSTER_TIME', '00:00:03')
+
 # Make all file creations user/group rw
 DEFAULT_PHOTOLOGUE_GROUP_WRITE = getattr(settings, 'PHOTOLOGUE_GROUP_WRITE', True)
 if DEFAULT_PHOTOLOGUE_GROUP_WRITE:
