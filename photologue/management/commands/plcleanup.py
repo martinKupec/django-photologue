@@ -47,7 +47,7 @@ def cleanup_videos(queue):
             try:
                 os.remove(video.file.path)
                 erasedb[hash] = filename
-                print "File ", filename, " erased"
+                print "File ", filename, " erased ", hash
             except:
                 print "Unable to erase ", video.file.path
                 continue
@@ -59,7 +59,7 @@ def cleanup_videos(queue):
                     raise IOError("target file exists")
                 file_move_safe(video.file.path, target, allow_overwrite=False)
                 privatedb[hash] = filename
-                print "File ", filename, " moved to private"
+                print "File ", filename, " moved to private ", hash
             except Exception, e:
                 print "Unable to move ", video.file.path, " ", e
                 continue
@@ -75,6 +75,8 @@ def cleanup_races():
     """
     queue = []
     for race in Race.objects.all():
+        if not race.rider:
+            continue
         if race.rider.name == PHOTOLOGUE_ERASE_NAME:
             queue.append((race.video, 'erase'))
         elif race.rider.name == PHOTOLOGUE_PRIVATE_NAME:

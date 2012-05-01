@@ -8,7 +8,6 @@ from django.template.defaultfilters import slugify
 
 from photologue.models import Video, Event, Race
 from photologue.default_settings import *
-from photologue.utils.video import video_sizes
 
 class Command(BaseCommand):
     help = _('Scan videos and update races')
@@ -40,5 +39,9 @@ def refresh_races():
         # Take the event
         event = event[0]
         race = Race(video=video, event=event)
-        race.save()
-        print "Added %s to %s" % (video.title, event.venue)
+        try:
+            race.save()
+        except Exception, e:
+            print e
+            continue
+        print "Added %s to %s" % (video.title, event.title)

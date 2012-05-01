@@ -4,7 +4,7 @@ from views import ajax_archive_index
 from models import *
 
 # Number of random images from the gallery to display.
-SAMPLE_SIZE = ":%d" % getattr(settings, 'GALLERY_SAMPLE_SIZE', 5)
+SAMPLE_SIZE = ":%d" % getattr(settings, 'GALLERY_SAMPLE_SIZE', 2)
 
 template_table = {
     'object_detail': u'%s_detail.html',
