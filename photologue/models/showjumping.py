@@ -1,3 +1,5 @@
+import unicodedata
+
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
@@ -16,7 +18,7 @@ class GalleryImposter(models.Model):
         return self.title
 
     def __str__(self):
-        return self.__unicode__()
+        return unicodedata.normalize('NFKD', self.__unicode__()).encode('ascii', 'ignore')
 
     def type(self):
         for cls in GalleryImposter.__subclasses__():
@@ -73,7 +75,7 @@ class RaceGalleryImposter(GalleryImposter):
     @property
     def items(self):
         video_ids = self.race_set.values_list('video_id', flat=True)
-        return Video.objects.filter(id__in=video_ids)
+        return Video.objects.filter(pk__in=video_ids)
 
     class Meta:
         abstract = True
@@ -98,6 +100,7 @@ class Horse(RaceGalleryImposter):
 
     class Meta:
         app_label=THIS_APP
+        ordering = ['name']
         verbose_name = _('horse')
         verbose_name_plural = _('horses')
 
@@ -120,6 +123,7 @@ class Rider(RaceGalleryImposter):
 
     class Meta:
         app_label=THIS_APP
+        ordering = ['name']
         verbose_name = _('rider')
         verbose_name_plural = _('riders')
 
@@ -147,12 +151,13 @@ class Venue(GalleryImposter):
 
     class Meta:
         app_label=THIS_APP
+        ordering = ['venue']
         verbose_name = _('venue')
         verbose_name_plural = _('venues')
 
 class Event(RaceGalleryImposter):
     name = models.CharField(_('name'), max_length=100)
-    name_slug = models.CharField(_('name slug'), max_length=100)
+    name_slug = models.CharField(_('name slug'), max_length=100, unique=True)
     venue = models.ForeignKey(Venue, verbose_name=_('venue'), null=False, blank=False)
     day_start = models.DateField(_('first day'))
     day_end = models.DateField(_('last day'))
@@ -175,6 +180,7 @@ class Event(RaceGalleryImposter):
 
     class Meta:
         app_label=THIS_APP
+        ordering = ['-day_start']
         unique_together = (('venue', 'day_start'), )
         verbose_name = _('event')
         verbose_name_plural = _('events')
@@ -194,11 +200,11 @@ class JumpingLevel(models.Model):
         out = self.level.replace('*', '_')
         if self.jumpoff:
             out += "-jumpoff"
-        print out
         return out
 
     class Meta:
         app_label=THIS_APP
+        ordering = ['level', 'jumpoff']
         unique_together = (('level', 'jumpoff'),)
         verbose_name = _('jumping level')
         verbose_name_plural = _('jumping levels')
@@ -215,6 +221,14 @@ class Race(models.Model):
         verbose_name = _('race')
         verbose_name_plural = _('races')
 
+    def __unicode__(self):
+        if self.rider and self.horse and self.level and self.event:
+            return "%s - %s - %s - %s" % (self.rider, self.horse, self.level, self.event)
+        return "Race %s" % self.video
+
+    def __str__(self):
+        return self.__unicode__()
+
     def save(self, *args, **kwargs):
         super(Race, self).save(*args, **kwargs)
 
@@ -230,6 +244,6 @@ class Race(models.Model):
                         level=self.level.slug,
                     )
             queryset = Video.objects.all()
-            unique_strvalue(self.video, title, 'title', queryset)
+            unique_strvalue(self.video, title, 'title', queryset, ' ')
             unique_strvalue(self.video, title_slug, 'title_slug', queryset, slug=True)
             self.video.save()

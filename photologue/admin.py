@@ -276,12 +276,13 @@ class RaceAdmin(admin.ModelAdmin):
     list_display = ('video', 'rider', 'horse', 'level', 'event', 'admin_thumbnail')
     list_filter = ['rider', 'horse', 'level', 'event']
     list_editable = ['rider', 'horse', 'level', 'event']
-    search_fields = ['video']
+    search_fields = ['video__title']
+    list_per_page = 30
 
     def admin_thumbnail(self, obj):
         thumb = obj.video.admin_thumbnail();
         if obj.video:
-            thumb += '<b> <a href="%s">Video admin</a></b>' % reverse('admin:photologue_video_change', args=(obj.video.id,))
+            thumb += '<b> <a href="%s">Video admin</a></b>' % reverse('admin:photologue_video_change', args=(obj.video.pk,))
         return thumb
     admin_thumbnail.short_description = _('Thumbnail')
     admin_thumbnail.allow_tags = True
@@ -294,6 +295,7 @@ class NonRaceVideo(Video):
 
 class NonRaceVideoAdmin(VideoAdmin):
     actions = ['erase', 'private']
+    list_max_show_all = 600
 
     def queryset(self, request):
         return NonRaceVideo.objects.exclude(id__in=Race.objects.values('video'))
@@ -309,7 +311,7 @@ class NonRaceVideoAdmin(VideoAdmin):
     def cleanup(self, request, changelist, how):
         queue = []
         for item in changelist:
-            queue.append((item, how))
+            queue.append((item.video, how))
         old_stdout = sys.stdout
         sys.stdout = redirect = StringIO()
         cleanup_videos(queue)
