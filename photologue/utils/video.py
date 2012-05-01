@@ -16,7 +16,7 @@ AUDIO_MP3 = getattr(settings, 'PHOTOLOGUE_AUDIO_MP3', 'libmp3lame')
 AUDIO_OGG = getattr(settings, 'PHOTOLOGUE_AUDIO_OGG', 'libvorbis')
 AUDIO_SAMPLING_RATE = getattr(settings, 'PHOTOLOGUE_AUDIO_SAMPLING_RATE', 22050)
 
-def video_sizes(video_file):
+def video_info(video_file):
     indata = subprocess.Popen([FFMPEG, '-i', video_file],
                                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     indata = '\n'.join(indata.communicate())
@@ -27,13 +27,20 @@ def video_sizes(video_file):
             [int(_) for _ in
             re.search("Video: .* (\d+)x(\d+)[, ].*SAR (\d+):(\d+) DAR (\d+):(\d+)",
                 indata, re.I).groups()]
+        dur = re.search("Duration: ([0123456789:.]*),.*", indata, re.I).groups()[0]
+        h, m , s = dur.split(':')
+        h = int(h)
+        m = int(m)
+        s = int(round(float(s)))
     except:
         raise Exception(indata)
+    # Calculate duration in seconds
+    duration = h * 60*60 + m * 60 + s
     # Calculate real width
     w = w*sar_n/sar_d
     # Aspect ratio
     aspect = 1.*dar_n/dar_d
-    return (w, h, aspect)
+    return (w, h, aspect, duration)
 
 def execute(command, header):
     print header
@@ -53,7 +60,7 @@ def video_create_poster(videopath, poster, video_data):
     '''
 
     output = ""
-    w,h,aspect = video_sizes(videopath)
+    w,h,aspect,duration = video_info(videopath)
     thumbnailfile = NamedTemporaryFile(suffix='.jpg')
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
                     '-vframes 1 -ss %(postertime)s -an '

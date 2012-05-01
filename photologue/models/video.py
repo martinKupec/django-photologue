@@ -7,7 +7,7 @@ from django.utils.timezone import now, is_aware, make_aware, get_current_timezon
 from django.utils.functional import curry
 
 from photologue.default_settings import *
-from photologue.utils.video import video_sizes
+from photologue.utils.video import video_info
 from media import *
 from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
@@ -90,7 +90,9 @@ class VideoModel(MediaModel):
         except VideoModel.DoesNotExist:
             pass
         if not self.poster:
-            self.poster = ImageModel.objects.create(file=DEFAULT_POSTER_PATH)
+            poster = ImageModel(file=DEFAULT_POSTER_PATH)
+            poster.save()
+            self.poster = poster
         super(VideoModel, self).save(*args, **kwargs)
     
     def delete(self):
@@ -116,7 +118,7 @@ class VideoModel(MediaModel):
         if not self.size_exists(mediasize):
             self.create_size(mediasize)
         try:
-            width, height, aspect = video_sizes(self._get_SIZE_filename(size))
+            width, height, aspect, duration = video_info(self._get_SIZE_filename(size))
         except:
             return
         return {'width': width, 'height': height}
@@ -223,18 +225,3 @@ class Video(GalleryItemBase, VideoModel):
         verbose_name = _("video")
         verbose_name_plural = _("videos")
         ordering = ['-date_taken']
-
-    def save(self, *args, **kwargs):
-        if self.date_taken is None:
-            try:
-                #exif_date = self.EXIF.get('EXIF DateTimeOriginal', None)
-                #if exif_date is not None:
-                #    d, t = str.split(exif_date.values)
-                #    year, month, day = d.split(':')
-                #    hour, minute, second = t.split(':')
-                #   self.date_taken = datetime(int(year), int(month), int(day),
-                #                               int(hour), int(minute), int(second))
-                pass
-            except:
-                pass
-        super(Video, self).save(*args, **kwargs)

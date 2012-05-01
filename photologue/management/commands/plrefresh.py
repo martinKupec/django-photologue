@@ -8,7 +8,7 @@ from django.template.defaultfilters import slugify
 
 from photologue.models import MediaSize, MediaModel, GalleryItemBase, Video, Photo
 from photologue.default_settings import *
-from photologue.utils.video import video_sizes
+from photologue.utils.video import video_info
 from photologue.utils.upload import move_file
 
 try:
@@ -37,9 +37,10 @@ def refresh_media():
 
     my_root = os.path.join(settings.MEDIA_ROOT, PHOTOLOGUE_DIR)
     for root, dirs, files in os.walk(my_root, followlinks=True):
-        # First filter out cache directories
+        # First filter out cache and poster directories
         try:
             dirs.remove('cache')
+            dirs.remove('poster')
         except:
             pass
         # Go througth files
@@ -65,8 +66,11 @@ def refresh_media():
             # Is it a video?
             if not filetype:
                 try:
-                    sizes = video_sizes(full)
-                    filetype = 'video'
+                    sizes = video_info(full)
+                    # Here comes a problem. If it is a jpeg image, it is
+                    # detected as mjpeg movie...check if it least at least 1s long
+                    if sizes[3] >= 1:
+                        filetype = 'video'
                 except Exception, e:
                     pass
             if not filetype:

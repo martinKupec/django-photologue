@@ -8,7 +8,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.files.base import File
 from django.utils.timezone import make_aware, get_current_timezone
 from django.template.defaultfilters import slugify
-from photologue.utils.video import video_sizes
+from photologue.utils.video import video_info
 from photologue.utils.libmc import get_moi_details, set_mpg_dar
 from photologue.models import Photo, Video, GalleryItemBase
 from photologue.default_settings import *
@@ -66,7 +66,7 @@ def upload_file(name, original_name, content, date_taken=None, retrieve_another=
             else:
                 inp = content
             # Try to open this file as video and get sizes
-            sizes = video_sizes(inp.name)
+            info = video_info(inp.name)
             # Ok, it is a video
             filetype = 'video'
 
