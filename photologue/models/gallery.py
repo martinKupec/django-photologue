@@ -209,6 +209,9 @@ class GalleryItemManager(models.Manager):
         return item_set[:count]
 
 class GalleryItemBase(models.Model):
+    # Fixing mult-table inheritance field shadowing
+    gallery_id = models.AutoField(db_column='id', primary_key=True)
+
     title = models.CharField(_('title'), max_length=100, unique=True)
     title_slug = models.SlugField(_('slug'), unique=True,
                                   help_text=('A "slug" is a unique URL-friendly title for an object.'))
