@@ -161,7 +161,7 @@ class MediaModel(models.Model):
             self.date_taken = now()
         if self._get_pk_val():
             remove_deleted = getattr(self, 'remove_deleted', PHOTOLOGUE_REMOVE_DELETED)
-            orig = MediaModel.objects.get(pk=self.pk)
+            orig = MediaModel.objects.get(id=self.mediamodel_ptr_id)
             if remove_deleted and orig.file.path != self.file.path:
                 # Try deleting original video
                 try:
@@ -213,13 +213,13 @@ class MediaSize(models.Model):
 
     def validate_unique(self, exclude=None):
         # Check as usual
+        errors = {}
         try:
             super(MediaSize, self).validate_unique(exclude)
-            # No erros
-            errors = {}
         except ValidationError, errors:
             # Save the error in errors
-            pass
+            errors = e.update_error_dict(errors)
+
         # Check for unique name
         qs = type(self).objects.filter(name = self.name)
         # Exclude the current object from the query if we are editing an
@@ -229,6 +229,10 @@ class MediaSize(models.Model):
         # Is anything here?
         if qs.exists():
             errors.setdefault('name', []).append(self.unique_error_message(type(self), ['name']))
+        # Check for insane setting
+        if self.crop == True:
+            if self.width == 0 or self.height == 0:
+                errors.setdefault('crop', []).append(_("size width and/or height can not be zero if crop=True."))
         # Raise errors as usual
         if errors:
             raise ValidationError(errors)
@@ -243,9 +247,6 @@ class MediaSize(models.Model):
         MediaSizeCache().reset()
 
     def save(self, *args, **kwargs):
-        if self.crop is True:
-            if self.width == 0 or self.height == 0:
-                raise ValueError("MediaSize width and/or height can not be zero if crop=True.")
         super(MediaSize, self).save(*args, **kwargs)
         MediaSizeCache().reset()
         self.clear_cache()

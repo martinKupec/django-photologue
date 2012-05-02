@@ -196,7 +196,29 @@ class VideoSize(MediaSize):
     def save(self, *args, **kwargs):
         if not self.pre_cache:
             self.pre_cache = True
-        super(VideoSize, self).save(*args, **kwargs)
+        MediaSizeCache().reset()
+        # Skip MediaSize save - prevent clearing caches
+        super(MediaSize, MediaSize).save(self, *args, **kwargs)
+
+    def validate_unique(self, exclude=None):
+        # Check as usual
+        errors = {}
+        try:
+            super(VideoSize, self).validate_unique(exclude)
+        except ValidationError, e:
+            # Save the error in errors
+            errors = e.update_error_dict(errors)
+
+        # Check for insane setting
+        if self.letterbox == True and self.crop == True:
+            errors.setdefault('letterbox', []).append(_("cannot be true both letterbox and crop."))
+            errors.setdefault('crop', []).append(     _("cannot be true both letterbox and crop."))
+        if self.letterbox == True:
+            if self.width == 0 or self.height == 0:
+                errors.setdefault('letterbox', []).append(_("width and/or height can not be zero if letterbox=true."))
+        # Raise errors as usual
+        if errors:
+            raise ValidationError(errors)
 
     def source_type(self):
         types = dict(zip(map(lambda x: x[0], VIDEO_TYPES), map(lambda x: x[2], VIDEO_TYPES)))
