@@ -29,7 +29,7 @@ def update_item(item, newname):
         file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
         path = item.file.path
         if not os.path.exists(path):
-            print item.title, ": files doesn't exist: ", path
+            print newname, ": files doesn't exist: ", path
             return
         root, name = os.path.split(path)
         base, ext = os.path.splitext(name)
