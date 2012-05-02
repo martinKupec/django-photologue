@@ -7,7 +7,7 @@ from django.utils.timezone import now, is_aware, make_aware, get_current_timezon
 from django.utils.functional import curry
 
 from photologue.default_settings import *
-from photologue.utils.video import video_info
+from photologue.utils.video import video_info, video_calculate_size
 from media import *
 from image import ImageModel, ImageSize
 from gallery import GalleryItemBase
@@ -33,7 +33,10 @@ def poster_unconverted(poster):
     return True
 
 class VideoModel(MediaModel):
-    poster = models.OneToOneField(ImageModel, null=True)
+    poster = models.OneToOneField(ImageModel, null=True, editable=False)
+    width = models.PositiveIntegerField(_('original video width'), editable=False)
+    height = models.PositiveIntegerField(_('original video height'), editable=False)
+    duration = models.PositiveIntegerField(_('video duration'), editable=False)
 
     class Meta:
         app_label=THIS_APP
@@ -76,19 +79,31 @@ class VideoModel(MediaModel):
                 self.date_taken = date
         # Add attribute if missing - we need it here
         prevent_cache_clear = getattr(self, 'prevent_cache_clear', False)
-        try:
-            orig = VideoModel.objects.get(pk=self.pk)
-            if orig.file == self.file:
-                self.prevent_cache_clear = True
-            elif not prevent_cache_clear:
-                if self.poster and not poster_unconverted(self.poster):
-                    # Change the file path
-                    self.poster.file = DEFAULT_POSTER_PATH
-                    # Save new poster - this will delete old poster and clear cache
-                    self.poster.save()
-                self.view_count = 0
-        except VideoModel.DoesNotExist:
-            pass
+        # Do we have original?
+        if not self._get_pk_val():
+            orig = False
+        else:
+            try:
+                orig = VideoModel.objects.get(id=self.videomodel_ptr_id)
+            except VideoModel.DoesNotExist:
+                orig = False
+
+        # Have we changed the file?
+        if orig and orig.file == self.file:
+            self.prevent_cache_clear = True
+        elif not prevent_cache_clear:
+            if self.poster and not poster_unconverted(self.poster):
+                # Change the file path
+                self.poster.file = DEFAULT_POSTER_PATH
+                # Save poster - this will delete old poster and clear cache
+                self.poster.save()
+            # Get the basic informations about the video
+            info = video_info(self.file.path)
+            self.width = info[0]
+            self.height = info[1]
+            self.duration = info[3]
+            self.view_count = 0
+        # Do we have poster?
         if not self.poster:
             poster = ImageModel(file=DEFAULT_POSTER_PATH)
             poster.save()
@@ -118,8 +133,8 @@ class VideoModel(MediaModel):
         if not self.size_exists(mediasize):
             self.create_size(mediasize)
         try:
-            width, height, aspect, duration = video_info(self._get_SIZE_filename(size))
-        except:
+            width, height = video_calculate_size(self, mediasize)
+        except Exception, e:
             return
         return {'width': width, 'height': height}
 

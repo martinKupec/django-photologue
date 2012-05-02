@@ -50,11 +50,11 @@ def process_files(select=None):
         convert.inprogress = True
         convert.message = ''
         convert.save()
-        
+
         filepath = convert.video.file.path
-        # Get input sizes
+        # Calculate size to convert
         try:
-            in_w, in_h, in_aspect = video_sizes(filepath)
+            out_w, out_h = video_calculate_size(convert.video, convert.videosize)
         except Exception, e:
             print "Failed to get sizes: ", os.path.split(filepath)[1]
             convert.message = e
@@ -62,30 +62,16 @@ def process_files(select=None):
             convert.save()
             continue
 
-        # Get output sizes
-        out_w = convert.videosize.width
-        out_h = convert.videosize.height
-        if out_w == out_h == 0:
-            out_w = in_w
-            out_h = in_h
-        elif out_w == 0:
-            out_w = int((out_h*in_aspect + 1)/2)*2
-        elif out_h == 0:
-            out_h = int((out_w/in_aspect + 1)/2)*2
-        
-        video_data = {'size': (out_w, out_h),
+        video_data = {
+                      'orig_w': convert.video.width,
+                      'orig_h': convert.video.height,
+                      'size': (out_w, out_h),
                       'videobitrate': convert.videosize.videobitrate,
                       'audiobitrate': convert.videosize.audiobitrate,
                       'twopass': convert.videosize.twopass,
                       }
         if convert.videosize.letterbox:
-            # Desired output aspect
-            out_aspect = 1.*out_w/out_h
-            # Calculate the needed height
-            conv_height = int(out_w/in_aspect)
-            # Set for processing
-            video_data['letterboxing'] = '-vf pad="%d:%d:(ow-iw)/2:(oh-ih)/2:black"' % (out_w, conv_height)
-            video_data['size'] = (out_w, conv_height)
+            video_data['letterboxing'] = '-vf pad="%d:%d:(ow-iw)/2:(oh-ih)/2:black"' % (out_w, out_h)
 
         # Create poster
         try:
@@ -97,7 +83,6 @@ def process_files(select=None):
             convert.message = e
             convert.save()
             continue
-
 
         if select == 'poster':
             # Save after poster creation

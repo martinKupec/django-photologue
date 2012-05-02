@@ -90,13 +90,13 @@ class VideoOverrideInline(generic.GenericTabularInline):
 
 class VideoAdmin(GalleryItemModelAdmin):
     inlines = [VideoOverrideInline]
-    list_display = ('title', 'date_taken', 'date_added', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
+    list_display = ('title', 'date_taken', 'date_added', 'duration', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
     list_per_page = 50
     prepopulated_fields = {'title_slug': ('title',)}
-    add_exclude = ('poster', 'crop_from', 'date_taken')
-    edit_exclude = ('poster', 'crop_from', )
+    add_exclude = ('crop_from', 'date_taken')
+    edit_exclude = ('crop_from', )
 
     def the_tags(self, obj):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))

@@ -17,30 +17,69 @@ AUDIO_OGG = getattr(settings, 'PHOTOLOGUE_AUDIO_OGG', 'libvorbis')
 AUDIO_SAMPLING_RATE = getattr(settings, 'PHOTOLOGUE_AUDIO_SAMPLING_RATE', 22050)
 
 def video_info(video_file):
-    indata = subprocess.Popen([FFMPEG, '-i', video_file],
-                                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    indata = '\n'.join(indata.communicate())
+    count = 0
+    indata = ""
+    while count < 5:
+        indata = subprocess.Popen([FFMPEG, '-i', video_file],
+                                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        indata = '\n'.join(indata.communicate())
+        if len(indata) > 1:
+            break
+        count += 1
+    if count == 5:
+        raise Exception("Unable to get output from ffmpeg")
 
-    # Get input width, height, and SAR&DAR, for anamorphic video
     try:
+        # Get input width, height, and SAR&DAR, for anamorphic video
         w, h, sar_n, sar_d, dar_n, dar_d = \
             [int(_) for _ in
             re.search("Video: .* (\d+)x(\d+)[, ].*SAR (\d+):(\d+) DAR (\d+):(\d+)",
                 indata, re.I).groups()]
+        # Get duration
         dur = re.search("Duration: ([0123456789:.]*),.*", indata, re.I).groups()[0]
-        h, m , s = dur.split(':')
-        h = int(h)
-        m = int(m)
-        s = int(round(float(s)))
+        hour, minute , second = dur.split(':')
+        hour = int(hour)
+        minute = int(minute)
+        second = int(round(float(second)))
     except:
         raise Exception(indata)
     # Calculate duration in seconds
-    duration = h * 60*60 + m * 60 + s
+    duration = hour * 60*60 + minute * 60 + second
     # Calculate real width
     w = w*sar_n/sar_d
     # Aspect ratio
     aspect = 1.*dar_n/dar_d
     return (w, h, aspect, duration)
+
+def video_calculate_size(video, videosize):
+    # Get input sizes if missing
+    if not video.width or not video.height:
+        in_w, in_h, in_aspect, in_dur = video_info(video.file.path)
+        video.width = in_w
+        video.height = in_h
+        video.duration = in_dur
+        # Save obtained data
+        video.save()
+    else:
+        in_w = video.width
+        in_h = video.height
+        in_aspect = 1.*in_w/in_h
+
+    # Get output sizes
+    out_w = videosize.width
+    out_h = videosize.height
+    if out_w == out_h == 0:
+        out_w = in_w
+        out_h = in_h
+    elif out_w == 0:
+        out_w = int((out_h*in_aspect + 1)/2)*2
+    elif out_h == 0:
+        out_h = int((out_w/in_aspect + 1)/2)*2
+    # Should we apply letteboxing?
+    if videosize.letterbox:
+        # Calculate the needed height
+        out_h = int(out_w/in_aspect)
+    return (out_w, out_h)
 
 def execute(command, header):
     print header
@@ -60,7 +99,6 @@ def video_create_poster(videopath, poster, video_data):
     '''
 
     output = ""
-    w,h,aspect,duration = video_info(videopath)
     thumbnailfile = NamedTemporaryFile(suffix='.jpg')
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
                     '-vframes 1 -ss %(postertime)s -an '
@@ -71,7 +109,7 @@ def video_create_poster(videopath, poster, video_data):
                         infile=videopath,
                         postertime=PHOTOLOGUE_POSTER_TIME,
                         outfile=thumbnailfile.name,
-                        size="%dx%d" % (w, h)
+                        size="%dx%d" % (video_data['orig_w'], video_data['orig_h'])
                     )
 
     (message, retval) = execute(grabimage, "-------------------- GRAB IMAGE ------------------")
@@ -91,14 +129,13 @@ def video_create_poster(videopath, poster, video_data):
     if dot != -1:
         name = name[:dot]
     name = os.path.join("poster", name+'.jpg')
-    # Save
-    poster.file.save(name, File(thumbnailfile))
 
     # Import poster_unconverted here
     from photologue.models.video import poster_unconverted
     if poster_unconverted(poster):
         poster.remove_deleted = False
-    poster.save()
+    # Store file and save
+    poster.file.save(name, File(thumbnailfile))
     return output
 
 def convertvideo_flv(video_in, video_out, video_data):
