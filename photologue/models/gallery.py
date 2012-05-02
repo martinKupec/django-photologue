@@ -1,6 +1,7 @@
 from os import path
 from datetime import datetime
 import zipfile
+import unicodedata
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -232,7 +233,7 @@ class GalleryItemBase(models.Model):
         return self.title
 
     def __str__(self):
-        return self.__unicode__()
+        return unicodedata.normalize('NFKD', self.__unicode__()).encode('ascii', 'ignore')
 
     def save(self, *args, **kwargs):
         if self.title_slug is None:
