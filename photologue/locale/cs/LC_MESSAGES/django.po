@@ -1,0 +1,955 @@
+# Django prohotologue application.
+# Copyright (C) 2012
+# This file is distributed under the same license as the photologue package.
+# Martin Kupec <magon@jkopava.cz>, 2012.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-05-03 22:54+0200\n"
+"PO-Revision-Date: 2012-05-03 18:00+2\n"
+"Last-Translator: Martin Kupec <magon@jkopava.cz\n"
+"Language-Team: Czech <cz@li.org>\n"
+"Language: Czech\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin.py:43
+msgid "Items scheduled to reconvert."
+msgstr "Položky připraveny k novému převodu"
+
+#: admin.py:44
+msgid "Reconvert"
+msgstr "Znovu převést"
+
+#: admin.py:48
+msgid "photo override"
+msgstr "Přepis fotky"
+
+#: admin.py:49
+msgid "photo overrides"
+msgstr "přepis fotek"
+
+#: admin.py:54
+msgid "ImageSize"
+msgstr "Velikost obrázu"
+
+#: admin.py:71 admin.py:103 admin.py:227
+msgid "Tags"
+msgstr "Tagy"
+
+#: admin.py:75
+msgid "Photo"
+msgstr "Fotka"
+
+#: admin.py:80
+msgid "video override"
+msgstr "Přepis videa"
+
+#: admin.py:81
+msgid "video overrides"
+msgstr "Přepis videí"
+
+#: admin.py:86
+msgid "VideoSize"
+msgstr "Velikost videa"
+
+#: admin.py:107
+msgid "Video"
+msgstr "Video"
+
+#: admin.py:120
+msgid "Convertion time"
+msgstr "Čas převodu"
+
+#: admin.py:124
+msgid "Queued"
+msgstr "Čeká"
+
+#: admin.py:133 management/commands/pladdfolder.py:67
+msgid "Done"
+msgstr "Hotovo"
+
+#: admin.py:135
+msgid "In progress"
+msgstr "provádí se"
+
+#: admin.py:137
+msgid "Status"
+msgstr "Status"
+
+#: admin.py:205
+msgid "Eighter gallery or title has to be filled."
+msgstr "Ani Gallerie ani titul nebyly vyplněny."
+
+#: admin.py:230 models/gallery.py:36
+msgid "gallery"
+msgstr "galerie"
+
+#: admin.py:231
+msgid "Gallery"
+msgstr "Galerie"
+
+#: admin.py:282 models/media.py:45
+msgid "Thumbnail"
+msgstr "Náhled"
+
+#: admin.py:288
+msgid "Non race video"
+msgstr "Nepřiřazené video"
+
+#: admin.py:289
+msgid "Non race videos"
+msgstr "Nepřiřazené videa"
+
+#: admin.py:300
+msgid "Erase"
+msgstr "Smazat"
+
+#: admin.py:304
+msgid "Move to private"
+msgstr "Přesunout mezi privátní"
+
+#: default_settings.py:56
+msgid "Very Low"
+msgstr "Hodně nízká"
+
+#: default_settings.py:57
+msgid "Low"
+msgstr "Nízká"
+
+#: default_settings.py:58
+msgid "Medium-Low"
+msgstr "Středně nízká"
+
+#: default_settings.py:59
+msgid "Medium"
+msgstr "Střední"
+
+#: default_settings.py:60
+msgid "Medium-High"
+msgstr "Středně vysoká"
+
+#: default_settings.py:61
+msgid "High"
+msgstr "Vysoká"
+
+#: default_settings.py:62
+msgid "Very High"
+msgstr "Velmi vysoká"
+
+#: default_settings.py:67
+msgid "Top"
+msgstr "Horní"
+
+#: default_settings.py:68
+msgid "Right"
+msgstr "V pravo"
+
+#: default_settings.py:69
+msgid "Bottom"
+msgstr "Spodní"
+
+#: default_settings.py:70
+msgid "Left"
+msgstr "V levo"
+
+#: default_settings.py:71
+msgid "Center (Default)"
+msgstr "Uprostřed (default)"
+
+#: default_settings.py:75
+msgid "Flip left to right"
+msgstr "Otoc vertikálně"
+
+#: default_settings.py:76
+msgid "Flip top to bottom"
+msgstr "Otoc horizontálně"
+
+#: default_settings.py:77
+msgid "Rotate 90 degrees counter-clockwise"
+msgstr "Rotace o 90 stupňů proti hodinkám"
+
+#: default_settings.py:78
+msgid "Rotate 90 degrees clockwise"
+msgstr "Rotace o 90 stupňů s hodinkáma"
+
+#: default_settings.py:79
+msgid "Rotate 180 degrees"
+msgstr "Rotace o 180 stupňů"
+
+#: default_settings.py:83
+msgid "Tile"
+msgstr "Dlaždicovat"
+
+#: default_settings.py:84
+msgid "Scale"
+msgstr "Zvětšit"
+
+#: admin_tweaks/actions.py:48
+#, python-format
+msgid "Successfully deleted %(count)d %(items)s."
+msgstr "Uspěšně zmazáno %(count)d %(items)s."
+
+#: admin_tweaks/actions.py:60
+#, python-format
+msgid "Cannot delete %(name)s"
+msgstr "Nelze smazat %(name)s"
+
+#: admin_tweaks/actions.py:62
+msgid "Are you sure?"
+msgstr "Určitě?"
+
+#: admin_tweaks/actions.py:83
+#, python-format
+msgid "Delete selected %(verbose_name_plural)s"
+msgstr "Zmazat vybrané %(verbose_name_plural)s"
+
+#: management/commands/pladdfolder.py:25
+msgid "Copy content of selected folder to media folder and add to database."
+msgstr "Zkopíruje obsah vybrané složky do složky s medii a přidá do databáze."
+
+#: management/commands/pladdfolder.py:26
+msgid "folder [gallery]"
+msgstr "složka [galerie]"
+
+#: management/commands/pladdfolder.py:33
+#: management/commands/plimportvideo.py:21
+msgid "Need a folder to work on."
+msgstr "Potřebuju složku k práci."
+
+#: management/commands/pladdfolder.py:42
+#: management/commands/plimportvideo.py:70
+msgid "Provided folder is not a valid folder."
+msgstr "Vybraná složka není validní složka"
+
+#: management/commands/pladdfolder.py:48
+msgid "Provided gallery title does not exists."
+msgstr "Titulek galerie nepatří žádné galerii."
+
+#: management/commands/plcleanup.py:16
+msgid "Sort out special races."
+msgstr "Vyřeš speciální parkury."
+
+#: management/commands/plimportvideo.py:13
+msgid "Import content of selected folder to photologue."
+msgstr "Importuj obsah zvolené složky do photologue."
+
+#: management/commands/plimportvideo.py:14
+msgid "folder [symlink]"
+msgstr "složka [symlink]"
+
+#: management/commands/plraces.py:14
+msgid "Scan videos and update races"
+msgstr "Projdi videa a přidej je do parkurů."
+
+#: management/commands/plrefresh.py:23
+msgid "Scan media upload folder and add any missing gallery items."
+msgstr "Projdi složku s medii a přidej chybějící položky do databaze."
+
+#: management/commands/plupdatefiles.py:20
+msgid ""
+"Set name and mtime of all files associated to media items to title_slug and "
+"date_taken."
+msgstr ""
+"Nastav jména a mtime všech souborů patřících k photologue na slug titulku a "
+"čas pořízení."
+
+#: models/gallery.py:21
+msgid "date published"
+msgstr "datum vydání"
+
+#: models/gallery.py:22 models/gallery.py:101 models/gallery.py:216
+msgid "title"
+msgstr "titulek"
+
+#: models/gallery.py:23
+msgid "title slug"
+msgstr "slug titulku"
+
+#: models/gallery.py:24 models/showjumping.py:131
+msgid "A \"slug\" is a unique URL-friendly title for an object."
+msgstr "\"slug\" je jedinečné jméno použitelné jako URL."
+
+#: models/gallery.py:25 models/gallery.py:104 models/media.py:290
+#: models/showjumping.py:85 models/showjumping.py:108
+#: models/showjumping.py:132 models/showjumping.py:163
+msgid "description"
+msgstr "popisek"
+
+#: models/gallery.py:26 models/gallery.py:105 models/gallery.py:221
+#: models/showjumping.py:86 models/showjumping.py:109
+#: models/showjumping.py:133 models/showjumping.py:164
+msgid "is public"
+msgstr "je veřejné"
+
+#: models/gallery.py:27 models/showjumping.py:87 models/showjumping.py:110
+#: models/showjumping.py:134 models/showjumping.py:165
+msgid "Public galleries will be displayed in the default views."
+msgstr "Veřejné galerije budou zobrazeny ve výchozím zobrazení."
+
+#: models/gallery.py:28
+msgid "items"
+msgstr "položka"
+
+#: models/gallery.py:37
+msgid "galleries"
+msgstr "galerie"
+
+#: models/gallery.py:62 models/showjumping.py:61
+msgid "count"
+msgstr "počet"
+
+#: models/gallery.py:84
+msgid "Select a gallery to set the users and permissions for."
+msgstr "Vyber galerii pro nastaveni uživatelských oprávnění."
+
+#: models/gallery.py:85
+msgid "Has Gallery Access"
+msgstr "Má přístup do galerie"
+
+#: models/gallery.py:88
+msgid "can view thumbnails"
+msgstr "Může vidět náhledy"
+
+#: models/gallery.py:88
+msgid "Uncheck this to prevent the users from seeing the gallery."
+msgstr "Odznačit, pokud se má zabránit zobrazení galerije."
+
+#: models/gallery.py:89
+msgid "can browse gallery"
+msgstr "Může otevřít galerii"
+
+#: models/gallery.py:89
+msgid "Uncheck to prevent users from seeing gallery in detail."
+msgstr "Odznačení zabrání uživateli vidět detaily galerie."
+
+#: models/gallery.py:90
+msgid "can download media"
+msgstr "Může stáhnou media"
+
+#: models/gallery.py:90
+msgid "Uncheck this to prevent users from downloading media."
+msgstr "Odznač pro zabránění stahování medií."
+
+#: models/gallery.py:91
+msgid "can download zip files of the whole gallery"
+msgstr "Může stáhnout zip-soubor celé galerie"
+
+#: models/gallery.py:91
+msgid ""
+"Uncheck this to prevent users from downloading a zip file of the whole "
+"gallery."
+msgstr "Odznaž pro zabránění stáhnutí celé galerije jako ZIP archívu."
+
+#: models/gallery.py:98
+msgid "media file zip"
+msgstr "ZIP soubor se soubory"
+
+#: models/gallery.py:99
+msgid "Select a .zip file of images to upload into a new Gallery."
+msgstr "Vyber .zip soubor s obrázky/video které se mají přidat."
+
+#: models/gallery.py:100
+msgid ""
+"Select a gallery to add these images to. leave this empty to create a new "
+"gallery from the supplied title."
+msgstr ""
+"Vyber galerii, do které se mají nové položky přidat. Nech prázdné, pokud se "
+"má vytvořitnová galerije s titulkem níže."
+
+#: models/gallery.py:101
+msgid "Title of the new gallery."
+msgstr "Titulek nové galerie"
+
+#: models/gallery.py:102
+msgid "use title"
+msgstr "použít titulek"
+
+#: models/gallery.py:102
+msgid "If checked, uploaded files will be named by title + sequencial number"
+msgstr ""
+"Pokud je zaskrtnuto, tak všechny soubory budou pojmenovány titulkem galerije "
+"+ sekvenčním číslem."
+
+#: models/gallery.py:103 models/gallery.py:219
+msgid "caption"
+msgstr "popisek"
+
+#: models/gallery.py:103
+msgid "Caption will be added to all items."
+msgstr "Popisek, který se přidá ke všem položkám."
+
+#: models/gallery.py:104
+msgid "A description of this Gallery."
+msgstr "Popis galerije."
+
+#: models/gallery.py:105
+msgid "Uncheck this to make the uploaded gallery and included media private."
+msgstr "Odznač, pokud májí být přidané položky neveřejné."
+
+#: models/gallery.py:110
+msgid "gallery upload"
+msgstr "nahrání galerije"
+
+#: models/gallery.py:111
+msgid "gallery uploads"
+msgstr "nahrání galerijí"
+
+#: models/gallery.py:217
+msgid "slug"
+msgstr "slug"
+
+#: models/gallery.py:220
+msgid "date added"
+msgstr "přidáno"
+
+#: models/gallery.py:221
+msgid "Public photographs will be displayed in the default views."
+msgstr "Veřejné položky budou zobrazeny ve výchozím zobrazení."
+
+#: models/gallery.py:222
+msgid "Is the main thumbnail for the gallery"
+msgstr "Tato položka je hlavní náhled"
+
+#: models/gallery.py:222
+msgid "This image will show up as the thumbnail for the gallery."
+msgstr "Tato položka se zobrazí jako náhled galerije."
+
+#: models/image.py:43
+#, python-format
+msgid ""
+"Chain multiple filters using the following pattern \"FILTER_ONE->FILTER_TWO-"
+">FILTER_THREE\". Image filters will be applied in order. The following "
+"filters are available: %s."
+msgstr ""
+"Filtry se řadí následově \"FILTR_jedna->FILTR_dva->FILTR_tři\". Filtry budou "
+"aplikovány postupně v pořadí. Tyto filtry jsou dostupné: %s."
+
+#: models/image.py:46
+msgid "effect"
+msgstr "efekt"
+
+#: models/image.py:179 models/image.py:223
+msgid "image effect"
+msgstr "obrázkový efekt"
+
+#: models/image.py:180
+msgid "quality"
+msgstr "kvalita"
+
+#: models/image.py:180
+msgid "JPEG image quality."
+msgstr "JPEG kvalita."
+
+#: models/image.py:181
+msgid "watermark image"
+msgstr "obrázek vodoznaku"
+
+#: models/image.py:186
+msgid "image size"
+msgstr "velikost obrázku"
+
+#: models/image.py:187
+msgid "image sizes"
+msgstr "velikosti obázků"
+
+#: models/image.py:211
+msgid "rotate or flip"
+msgstr "otoč nebo překlop"
+
+#: models/image.py:212 models/image.py:219
+msgid "color"
+msgstr "barva"
+
+#: models/image.py:212
+msgid ""
+"A factor of 0.0 gives a black and white image, a factor of 1.0 gives the "
+"original image."
+msgstr "Faktor 0.0 je černá/bílá, faktor 1.0 je barva originálního obrázeku."
+
+#: models/image.py:213
+msgid "brightness"
+msgstr "jasnost"
+
+#: models/image.py:213
+msgid ""
+"A factor of 0.0 gives a black image, a factor of 1.0 gives the original "
+"image."
+msgstr "Faktro 0.0 je černý obrázek, faktor 1.0 je originální obrázek."
+
+#: models/image.py:214
+msgid "contrast"
+msgstr "kontrast"
+
+#: models/image.py:214
+msgid ""
+"A factor of 0.0 gives a solid grey image, a factor of 1.0 gives the original "
+"image."
+msgstr "Faktor 0.0 je šedý obrázek, faktor 1.0 je nezměněný obrázek."
+
+#: models/image.py:215
+msgid "sharpness"
+msgstr "ostrost"
+
+#: models/image.py:215
+msgid ""
+"A factor of 0.0 gives a blurred image, a factor of 1.0 gives the original "
+"image."
+msgstr ""
+"Faktor 0.0 je úplně rozmazaný obrázek, faktor 1.0 je nezměněný obrázek."
+
+#: models/image.py:216
+msgid "filters"
+msgstr "filtry"
+
+#: models/image.py:217
+msgid "size"
+msgstr "velikost"
+
+#: models/image.py:217
+msgid ""
+"The height of the reflection as a percentage of the orignal image. A factor "
+"of 0.0 adds no reflection, a factor of 1.0 adds a reflection equal to the "
+"height of the orignal image."
+msgstr ""
+"Výška reflexe jako procento výšky originálního obrázku. Faktor 0.0 znamená "
+"žádná reflexe, 1.0 přidá reflexi velkou jako původní obrázek."
+
+#: models/image.py:218
+msgid "strength"
+msgstr "síla"
+
+#: models/image.py:218
+msgid "The initial opacity of the reflection gradient."
+msgstr "Počáteční průhlednost reflexního gradientu."
+
+#: models/image.py:219
+msgid ""
+"The background color of the reflection gradient. Set this to match the "
+"background color of your page."
+msgstr ""
+"Barva pozadí pro reflexní gradient. Nejlépe nastavit tak, aby souhlasilo s "
+"pozadím stránky."
+
+#: models/image.py:224
+msgid "image effects"
+msgstr "obrázkové efekty"
+
+#: models/image.py:251
+msgid "image"
+msgstr "obrázek"
+
+#: models/image.py:252
+msgid "style"
+msgstr "styl"
+
+#: models/image.py:253
+msgid "opacity"
+msgstr "průhlednost"
+
+#: models/image.py:253
+msgid "The opacity of the overlay."
+msgstr "Průhlednost překryvu."
+
+#: models/image.py:257
+msgid "watermark"
+msgstr "vodoznak"
+
+#: models/image.py:258
+msgid "watermarks"
+msgstr "vodoznaky"
+
+#: models/media.py:13
+msgid "file"
+msgstr "soubor"
+
+#: models/media.py:15
+msgid "date taken"
+msgstr "datum pořízení"
+
+#: models/media.py:17
+msgid "crop from"
+msgstr "ostřihnout z"
+
+#: models/media.py:35
+msgid "An \"admin_thumbnail\" size has not been defined."
+msgstr "\"admin_thumbnail\" nebyl nadefinován."
+
+#: models/media.py:197 models/media.py:289 models/showjumping.py:83
+#: models/showjumping.py:106 models/showjumping.py:157
+msgid "name"
+msgstr "jméno"
+
+#: models/media.py:197
+msgid ""
+"Size name should contain only letters, numbers and underscores. Examples: "
+"\"thumbnail\", \"display\", \"small\", \"main_page_widget\"."
+msgstr ""
+"Jména velikostí by měly obsahovat pouze písmenka, čísla a podtržítka. "
+"Příklady: \"nahled\", \"zobrazeni\", \"maly\""
+
+#: models/media.py:198
+msgid "width"
+msgstr "šířka"
+
+#: models/media.py:198
+msgid ""
+"If width is set to \"0\" the media will be scaled to the supplied height."
+msgstr "Pokud je šířka nastavena na \"0\", tak se spočítá z výšky."
+
+#: models/media.py:199
+msgid "height"
+msgstr "výška"
+
+#: models/media.py:199
+msgid ""
+"If height is set to \"0\" the media will be scaled to the supplied width"
+msgstr "Pokud je výška nastavena na \"0\", tak se spočítá z šířky."
+
+#: models/media.py:200
+msgid "upscale media?"
+msgstr "Zvětšit?"
+
+#: models/media.py:200
+msgid ""
+"If selected the media will be scaled up if necessary to fit the supplied "
+"dimensions. Cropped sizes will be upscaled regardless of this setting."
+msgstr ""
+"Pokud je toto označeno, bude soubor zvětšen na pořadované rozměry Budé "
+"taktéž oříznut, nezávisle na nastavení oříznutí."
+
+#: models/media.py:201
+msgid "crop to fit?"
+msgstr "oříznout"
+
+#: models/media.py:201
+msgid ""
+"If selected the media will be scaled and cropped to fit the supplied "
+"dimensions."
+msgstr ""
+"Pokud označeno, soubor s zvětší a ořízne, aby splňoval požadované rozměry."
+
+#: models/media.py:202
+msgid "pre-cache?"
+msgstr "předvytvořit"
+
+#: models/media.py:202
+msgid "If selected this media size will be pre-cached as media are added."
+msgstr ""
+"Označením se určí, že tato velikost se vytvoří při přidání originálu do "
+"databaze."
+
+#: models/media.py:203
+msgid "increment view count?"
+msgstr "přičíst počet zhlédnutí?"
+
+#: models/media.py:203
+msgid ""
+"If selected the \"view_count\" will be incremented when this size is "
+"displayed."
+msgstr ""
+"Pokud je toto zaškrtnuté, tak se při každém načtení teto velikostipřičte "
+"počet zhlédnutí."
+
+#: models/media.py:235
+msgid "size width and/or height can not be zero if crop=True."
+msgstr "ani výška ani šířka nesmí být nula, pokud je zaplé oříznutí."
+
+#: models/photo.py:12
+msgid "photo"
+msgstr "fotka"
+
+#: models/photo.py:13
+msgid "photos"
+msgstr "fotky"
+
+#: models/showjumping.py:84 models/showjumping.py:107
+msgid "Nickname"
+msgstr "přezdívka"
+
+#: models/showjumping.py:84
+msgid "Horse nickname for archivation."
+msgstr "Označení koně pro archivaci."
+
+#: models/showjumping.py:102 models/showjumping.py:213
+msgid "horse"
+msgstr "kůň"
+
+#: models/showjumping.py:103
+msgid "horses"
+msgstr "koně"
+
+#: models/showjumping.py:107
+msgid "Riders nickname for archivation."
+msgstr "Označení jezdce pro archivaci."
+
+#: models/showjumping.py:125 models/showjumping.py:212
+msgid "rider"
+msgstr "jezdec"
+
+#: models/showjumping.py:126
+msgid "riders"
+msgstr "jezdci"
+
+#: models/showjumping.py:129 models/showjumping.py:153
+#: models/showjumping.py:159
+msgid "venue"
+msgstr "místo"
+
+#: models/showjumping.py:130
+msgid "venue slug"
+msgstr "slug místa"
+
+#: models/showjumping.py:154
+msgid "venues"
+msgstr "místa"
+
+#: models/showjumping.py:158
+msgid "name slug"
+msgstr "slug jména"
+
+#: models/showjumping.py:160
+msgid "first day"
+msgstr "první den"
+
+#: models/showjumping.py:161
+msgid "last day"
+msgstr "poslední den"
+
+#: models/showjumping.py:183 models/showjumping.py:215
+msgid "event"
+msgstr "závody"
+
+#: models/showjumping.py:184
+msgid "events"
+msgstr "závody"
+
+#: models/showjumping.py:187
+msgid "obstacles level"
+msgstr "výška překážek"
+
+#: models/showjumping.py:188 models/showjumping.py:191
+msgid "jumpoff"
+msgstr "rozeskakování"
+
+#: models/showjumping.py:207
+msgid "jumping level"
+msgstr "obtížnosti"
+
+#: models/showjumping.py:208
+msgid "jumping levels"
+msgstr "obtížnosti"
+
+#: models/showjumping.py:211 models/video.py:262
+msgid "video"
+msgstr "video"
+
+#: models/showjumping.py:214
+msgid "course level"
+msgstr "výška kurzu"
+
+#: models/showjumping.py:219
+msgid "race"
+msgstr "parkur"
+
+#: models/showjumping.py:220
+msgid "races"
+msgstr "parkury"
+
+#: models/video.py:37
+msgid "original video width"
+msgstr "originální šířka videa"
+
+#: models/video.py:38
+msgid "original video height"
+msgstr "originální výška videa"
+
+#: models/video.py:39
+msgid "video duration"
+msgstr "délka videa"
+
+#: models/video.py:195
+msgid "type"
+msgstr "typ"
+
+#: models/video.py:196
+msgid "This is video format for this video size."
+msgstr "Toto je formát videa pro tuto velikost."
+
+#: models/video.py:197
+msgid "two pass?"
+msgstr "two pass?"
+
+#: models/video.py:197
+msgid ""
+"If selected, the conversion will be performed in two "
+"passes,                    it is slower, but the result is generally better."
+msgstr ""
+"Pokud povoleno, tak se video konvertuje na dvakrát. Je to pomalejší ale "
+"výsledek je lepší."
+
+#: models/video.py:199
+msgid "letterbox"
+msgstr "letterbox"
+
+#: models/video.py:199
+msgid ""
+"If enabled and aspect ratio is not matching,                    put the "
+"video in black box."
+msgstr ""
+"Pokud povoleno a nesedí poměr stran, tak se video umístí do černého rámečku."
+
+#: models/video.py:201
+msgid "video bitrate (kbps)"
+msgstr "bitová rychlost videa (kbps)"
+
+#: models/video.py:201
+msgid "Video bitrate in kilobits per second."
+msgstr "Bitová rychlost videa v kbps"
+
+#: models/video.py:202
+msgid "audio bitrate (kbps)"
+msgstr "bitová rychlost zvuku (kbps)"
+
+#: models/video.py:202
+msgid ""
+"Audio bitrate in kilobits per second.                    When set to 0, it "
+"will mute audio."
+msgstr ""
+"Bitová rychlost pro zvuk v kbps.                    Pokud je nastavena na 0, "
+"zvuk se zruší."
+
+#: models/video.py:208
+msgid "video size"
+msgstr "velikost videa"
+
+#: models/video.py:209
+msgid "video sizes"
+msgstr "velikosti videjí"
+
+#: models/video.py:229 models/video.py:230
+msgid "cannot be true both letterbox and crop."
+msgstr "neleze zapnout oříznutí i letterbox"
+
+#: models/video.py:233
+msgid "width and/or height can not be zero if letterbox=true."
+msgstr "ani výška ani šířka nesmí být nula, pokud je zaplý letterbox"
+
+#: models/video.py:244
+msgid "video to convert"
+msgstr "videa pro převedení"
+
+#: models/video.py:245
+msgid "video size to use"
+msgstr "velikost videa"
+
+#: models/video.py:246
+msgid "access date"
+msgstr "datum posledního přístupu"
+
+#: models/video.py:246
+msgid "This date changes on each access to this object"
+msgstr "Toto datum se změní při každé změně objektu"
+
+#: models/video.py:247
+msgid "convertion time"
+msgstr "čas převodu"
+
+#: models/video.py:247
+msgid "this is the time the conversion took."
+msgstr "toto je čas, jak dlouho trvala konverze."
+
+#: models/video.py:248
+msgid "in progress"
+msgstr "běží"
+
+#: models/video.py:249
+msgid "converted"
+msgstr "převedeno"
+
+#: models/video.py:250
+msgid "message"
+msgstr "zpráva"
+
+#: models/video.py:263
+msgid "videos"
+msgstr "videa"
+
+#: templates/photologue/gallery_archive.html:6
+#: templates/photologue/gallery_archive.html:10
+#: templates/photologue/media_archive.html:6
+#: templates/photologue/media_archive.html:10
+msgid "Latest"
+msgstr "Poslední"
+
+#: templates/photologue/gallery_archive.html:14
+#: templates/photologue/gallery_archive_day.html:14
+#: templates/photologue/gallery_archive_month.html:14
+#: templates/photologue/gallery_archive_year.html:18
+#: templates/photologue/gallery_detail.html:19
+#: templates/photologue/media_archive.html:18
+#: templates/photologue/media_archive_day.html:18
+#: templates/photologue/media_archive_month.html:18
+msgid "View all"
+msgstr "Zobrazit všechny"
+
+#: templates/photologue/gallery_archive_day.html:6
+#: templates/photologue/gallery_archive_day.html:10
+#: templates/photologue/gallery_archive_month.html:6
+#: templates/photologue/gallery_archive_month.html:10
+#: templates/photologue/gallery_archive_year.html:6
+#: templates/photologue/gallery_archive_year.html:10
+#: templates/photologue/media_archive_day.html:6
+#: templates/photologue/media_archive_day.html:10
+#: templates/photologue/media_archive_month.html:6
+#: templates/photologue/media_archive_month.html:10
+#: templates/photologue/media_archive_year.html:5
+#: templates/photologue/media_archive_year.html:9
+msgid "for"
+msgstr "pro"
+
+#: templates/photologue/gallery_detail.html:12
+msgid "Originally published"
+msgstr "Přidáno"
+
+#: templates/photologue/gallery_list.html:6
+#: templates/photologue/gallery_list.html:10
+msgid "All "
+msgstr "Všechny "
+
+#: templates/photologue/gallery_listing.html:11
+#: templates/photologue/media_archive.html:15
+#: templates/photologue/media_archive_day.html:15
+#: templates/photologue/media_archive_month.html:15
+#: templates/photologue/media_list.html:15
+msgid "No"
+msgstr "Ne"
+
+#: templates/photologue/gallery_listing.html:11
+#: templates/photologue/media_archive.html:15
+#: templates/photologue/media_archive_day.html:15
+#: templates/photologue/media_archive_month.html:15
+#: templates/photologue/media_list.html:15
+msgid "were found."
+msgstr "bylo nalezeno."
+
+#: templates/photologue/media_list.html:6
+#: templates/photologue/media_list.html:10
+msgid "All"
+msgstr "Všechny"
+
+#: templates/photologue/photo_detail.html:16
+msgid "This photo is found in the following galleries"
+msgstr "Tato fotka je v následujících galerijích"
+
+#: templates/photologue/video_detail.html:17
+msgid "Video convertion in progress."
+msgstr "Video se zpracovává."
+
+#: templates/photologue/video_detail.html:34
+msgid "This video is found in the following galleries"
+msgstr "Toto video je v nasledujících galerijích"
