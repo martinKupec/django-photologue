@@ -1,21 +1,27 @@
 import os
+from optparse import make_option
 from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from photologue.models import VideoConvert, poster_unconverted, MediaSizeCache
+from photologue.models import VideoConvert, poster_unconverted, MediaSizeCache, Video
 from photologue.utils.video import *
 from photologue.default_settings import *
 
 class Command(BaseCommand):
-
+    option_list = BaseCommand.option_list + (
+        make_option('--poster-only', '-p', action="store_true", dest='poster_only', default=False,
+            help='Convert only posters, but check all videos.'),
+        )
     help = ('Converts unprocessed photologue video files.')
 
-    args = ['[poster]']
     requires_model_validation = True
     can_import_settings = True
 
     def handle(self, *args, **options):
-        return process_files(*args)
+        poster_only = options.get('poster_only')
+        if poster_only:
+            return process_posters()
+        return process_files()
 
 def should_convert_poster(video):
     if poster_unconverted(video.poster):
@@ -30,7 +36,20 @@ def should_convert_poster(video):
                 return False
     return True
 
-def process_files(select=None):
+def process_posters():
+    for video in Video.objects.all():
+        try:
+            if video.poster and should_convert_poster(video):
+                video_data = {
+                              'orig_w': video.width,
+                              'orig_h': video.height,
+                              'duration': video.duration,
+                             }
+                print video_create_poster(video.file.path, video.poster, video_data)
+        except Exception, e:
+            print e
+
+def process_files():
     """
     Creates videosize files for the given video objects.
     """
@@ -65,6 +84,7 @@ def process_files(select=None):
         video_data = {
                       'orig_w': convert.video.width,
                       'orig_h': convert.video.height,
+                      'duration': convert.video.duration,
                       'size': (out_w, out_h),
                       'videobitrate': convert.videosize.videobitrate,
                       'audiobitrate': convert.videosize.audiobitrate,
@@ -81,12 +101,6 @@ def process_files(select=None):
             print e
             convert.inprogress = False
             convert.message = e
-            convert.save()
-            continue
-
-        if select == 'poster':
-            # Save after poster creation
-            convert.inprogress = False
             convert.save()
             continue
 

@@ -1,4 +1,5 @@
 import sys, os, subprocess, re, shlex, string
+from datetime import datetime, timedelta, time
 from base64 import b64decode
 from tempfile import mktemp
 from django.core.management.base import BaseCommand, CommandError
@@ -100,6 +101,17 @@ def video_create_poster(videopath, poster, video_data):
 
     output = ""
     thumbnailfile = NamedTemporaryFile(suffix='.jpg')
+
+    try:
+        request = datetime.strptime(PHOTOLOGUE_POSTER_TIME, '%H:%M:%S.%f')
+    except:
+        request = datetime.strptime(PHOTOLOGUE_POSTER_TIME, '%H:%M:%S')
+    requested_time = (datetime.combine(datetime.min, request.time()) - datetime.min).total_seconds()
+    # Is requested time after video end?
+    if video_data['duration'] < requested_time:
+        poster_time = str(timedelta(seconds=video_data['duration']/2.0))
+    else:
+        poster_time = PHOTOLOGUE_POSTER_TIME
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
                     '-vframes 1 -ss %(postertime)s -an '
                     '-vcodec mjpeg -f rawvideo '
@@ -107,7 +119,7 @@ def video_create_poster(videopath, poster, video_data):
                     ) % dict(
                         ffmpeg=FFMPEG,
                         infile=videopath,
-                        postertime=PHOTOLOGUE_POSTER_TIME,
+                        postertime=poster_time,
                         outfile=thumbnailfile.name,
                         size="%dx%d" % (video_data['orig_w'], video_data['orig_h'])
                     )

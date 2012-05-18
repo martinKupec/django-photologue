@@ -90,7 +90,7 @@ class VideoOverrideInline(generic.GenericTabularInline):
 
 class VideoAdmin(GalleryItemModelAdmin):
     inlines = [VideoOverrideInline]
-    list_display = ('title', 'date_taken', 'date_added', 'duration', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
+    list_display = ('title', 'date_taken', 'date_added', 'the_duration', 'is_public', 'the_tags', 'view_count', 'admin_thumbnail')
     list_filter = ['date_added', 'is_public']
     search_fields = ['title', 'title_slug', 'caption']
     list_per_page = 50
@@ -101,6 +101,11 @@ class VideoAdmin(GalleryItemModelAdmin):
     def the_tags(self, obj):
         return ", ".join(map(lambda x: x.name, obj.tags.all()))
     the_tags.short_description = _('Tags')
+
+    def the_duration(self, video):
+        return str(timedelta(seconds=video.duration))
+    the_duration.short_description = VideoModel._meta.get_field_by_name('duration')[0].verbose_name
+    the_duration.admin_order_field = 'duration'
 
     def formfield_for_dbfield(self, db_field, **kwargs):
         if db_field.name == 'file':
