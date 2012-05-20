@@ -1,6 +1,7 @@
 import os
 from optparse import make_option
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils.timezone import now
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from photologue.models import VideoConvert, poster_unconverted, MediaSizeCache, Video
@@ -11,15 +12,19 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('--poster-only', '-p', action="store_true", dest='poster_only', default=False,
             help='Convert only posters, but check all videos.'),
+        make_option('--unlock', '-u', action="store_true", dest='unlock', default=False,
+            help='Remove any "in progress" marks before converting'),
         )
-    help = ('Converts unprocessed photologue video files.')
+    help = 'Converts unprocessed photologue video files.'
 
     requires_model_validation = True
     can_import_settings = True
 
     def handle(self, *args, **options):
-        poster_only = options.get('poster_only')
-        if poster_only:
+        cleanup_converts()
+        if options.get('unlock'):
+            unlock_converts()
+        if options.get('poster_only'):
             return process_posters()
         return process_files()
 
@@ -127,3 +132,17 @@ def process_files():
         convert.inprogress = False
         convert.converted = True
         convert.save()
+
+def cleanup_converts():
+    for convert in VideoConvert.objects.all():
+        if not convert.converted:
+            continue
+        # Delete all older than 7 days
+        if (now() - convert.access_date) > timedelta(7):
+            convert.delete()
+
+def unlock_converts():
+    for convert in VideoConvert.objects.all():
+        if convert.inprogress:
+            convert.inprogress = False
+            convert.save()
