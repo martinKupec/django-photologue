@@ -134,6 +134,8 @@ class VideoModel(MediaModel):
             self.create_size(mediasize)
         try:
             width, height = video_calculate_size(self, mediasize)
+            if self._get_filename_for_size(mediasize) == 'unconverted':
+                return
         except Exception, e:
             return
         return {'width': width, 'height': height}
@@ -252,6 +254,8 @@ class VideoConvert(models.Model):
     class Meta:
         app_label=THIS_APP
         ordering = ['-video__date_taken']
+        verbose_name = _("video convert")
+        verbose_name_plural = _("video converts")
 
     def __unicode__(self):
         return unicode(self.video)

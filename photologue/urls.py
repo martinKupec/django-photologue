@@ -26,8 +26,8 @@ def meta_url(url, view, kwargs, name, type, type_args):
     model = new_kwargs['queryset'].model
     extra_context = {
         'model_type': model._meta.object_name.lower(),
-        'model_name': model._meta.verbose_name.capitalize(),
-        'model_name_plural': model._meta.verbose_name_plural.capitalize(),
+        'model_name': model._meta.verbose_name,
+        'model_name_plural': model._meta.verbose_name_plural,
     }
     if 'extra_context' in new_kwargs:
         new_kwargs['extra_context'].update(extra_context)
