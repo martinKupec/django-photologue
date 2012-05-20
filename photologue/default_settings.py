@@ -51,6 +51,8 @@ DEFAULT_PHOTOLOGUE_GROUP_WRITE = getattr(settings, 'PHOTOLOGUE_GROUP_WRITE', Tru
 if DEFAULT_PHOTOLOGUE_GROUP_WRITE:
     old = os.umask(stat.S_IWOTH)
 
+PHOTOLOGUE_VIDEO_EXTENTIONS = getattr(settings, 'PHOTOLOGUE_VIDEO_EXTENTIONS', ['mpg', 'mov'])
+
 # Quality options for JPEG images
 JPEG_QUALITY_CHOICES = (
     (30, _('Very Low')),
