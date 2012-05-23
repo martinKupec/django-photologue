@@ -6,6 +6,7 @@ from django.core.files.move import file_move_safe
 from photologue.default_settings import *
 from photologue.utils.hashdb import *
 from photologue.models import Race
+from photologue.management.commands.plimportvideo import fndeleted
 
 PHOTOLOGUE_ARCHIVE = getattr(settings, 'PHOTOLOGUE_ARCHIVE', os.path.join(settings.MEDIA_ROOT, 'archive'))
 PHOTOLOGUE_ERASE_NAME = getattr(settings, 'PHOTOLOGUE_ERASE_NAME', 'ERASE')
@@ -37,12 +38,13 @@ def cleanup_videos(queue):
             continue
         hash = get_hash(video.file.path)
         filename = os.path.basename(video.file.url)
+        already_done = False
         if hash in erasedb:
             print "File ", filename ," already erased: ", erasedb[hash]
-            continue
+            already_done = True
         if hash in privatedb:
             print "File ", filename," already moved to private: ", privatedb[hash]
-            continue
+            already_done = True
         if how == 'erase':
             try:
                 os.remove(video.file.path)
@@ -54,17 +56,25 @@ def cleanup_videos(queue):
         elif how == 'private':
             try:
                 target = os.path.join(private_folder, filename)
-                # Work around django bug
-                if os.path.exists(target):
-                    raise IOError("target file exists")
-                file_move_safe(video.file.path, target, allow_overwrite=False)
-                privatedb[hash] = filename
-                print "File ", filename, " moved to private ", hash
+                if already_done:
+                    os.remove(video.file.path)
+                else:
+                    # Work around django bug
+                    if os.path.exists(target):
+                        raise IOError("target file exists")
+                    file_move_safe(video.file.path, target, allow_overwrite=False)
+                    privatedb[hash] = filename
+                    print "File ", filename, " moved to private ", hash
             except Exception, e:
                 print "Unable to move ", video.file.path, " ", e
                 continue
         else:
             raise Exception("Unknown action type: %s" % how)
+        # Update deleted database if not already done
+        if not already_done:
+            fdeleted = open(fndeleted, 'a')
+            fdeleted.write("%(hash)s %(file)s\n" % dict(hash=hash, file=filename))
+            fdeleted.close()
         video.delete()
     writedb(os.path.join(PHOTOLOGUE_ARCHIVE, '.erasedb'), erasedb )
     writedb(os.path.join(PHOTOLOGUE_ARCHIVE, '.privatedb'), privatedb )
