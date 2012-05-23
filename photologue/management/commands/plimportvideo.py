@@ -26,6 +26,7 @@ class Command(BaseCommand):
         return import_videos(args[0], options.get('symlink')) + '\n'
 
 fncache = os.path.join(settings.MEDIA_ROOT, get_storage_path(None, ".hash_cache"))
+fndeleted = os.path.join(settings.MEDIA_ROOT, get_storage_path(None, ".hash_deleted"))
 
 def hash_videos():
     db = {}
@@ -68,11 +69,12 @@ def hash_videos():
     return (db, names)
 
 def save_db(db):
-    fcache = open(fncache, 'w')
+    fcache = open(fncache + '.tmp', 'w')
     for key, value in db.items():
         atime = os.path.getatime(value)
         fcache.write("%(hash)s %(atime)f %(file)s\n" % dict(hash=key, file=value, atime=atime))
     fcache.close()
+    shutil.move(fncache + '.tmp', fncache)
 
 def update_db(hash, path):
     fcache = open(fncache, 'a')
@@ -105,6 +107,18 @@ def import_videos(folder, symlink=False):
 
     db,names = hash_videos()
 
+    deleted = {}
+    try:
+        fdeleted = open(fndeleted, 'r')
+        for line in fdeleted:
+            hash, path = line.split(' ', 2)
+            path = path[:-1]
+            deleted[hash] = path
+        fdeleted.close()
+    except IOError, e:
+        if e.errno != 2:
+            raise e
+
     for video in os.listdir(folder):
         path = os.path.join(folder, video)
         ext = video.split('.')[-1].lower()
@@ -116,6 +130,10 @@ def import_videos(folder, symlink=False):
             print "File already imported: ", path
             continue
 
+        if hash in deleted:
+            print "File previously deleted: ", path, " - ", deleted[hash]
+            continue
+
         item = Video()
         queryset = Video.objects.all()
         unique_strvalue(item, video, 'title', queryset, ' ')
@@ -123,15 +141,16 @@ def import_videos(folder, symlink=False):
         target = get_storage_path(item, video)
         if target in names:
             print "File already targeted: ", path
+        dest = os.path.join(settings.MEDIA_ROOT, target)
         try:
-            file_copy(path, os.path.join(settings.MEDIA_ROOT, target), symlink)
+            file_copy(path, dest, symlink)
         except Exception, e:
             print e
             continue
         item.file = target
         item.save()
-        db[hash] = path
-        update_db(hash, path)
+        db[hash] = dest
+        update_db(hash, dest)
         names.add(target)
         print "Imported", target, hash
     save_db(db)
