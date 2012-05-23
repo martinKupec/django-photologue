@@ -108,7 +108,8 @@ def video_create_poster(videopath, poster, video_data):
         request = datetime.strptime(PHOTOLOGUE_POSTER_TIME, '%H:%M:%S')
     requested_time = (datetime.combine(datetime.min, request.time()) - datetime.min).total_seconds()
     # Is requested time after video end?
-    if video_data['duration'] < requested_time:
+    # There is some rounding in process, we need to make shure we are safe
+    if video_data['duration'] - 1 < requested_time:
         poster_time = str(timedelta(seconds=video_data['duration']/2.0))
     else:
         poster_time = PHOTOLOGUE_POSTER_TIME
