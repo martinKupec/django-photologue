@@ -66,8 +66,11 @@ def process_files():
 
     for convert in convert_videos:
         # Reload
-        convert = VideoConvert.objects.get(id=convert.id)
-        if convert.inprogress or convert.converted:
+        try:
+            convert = VideoConvert.objects.get(id=convert.id)
+            if convert.inprogress or convert.converted:
+                continue
+        except VideoConvert.DoesNotExist:
             continue
         # We are processing it - lock
         # This is not 100% coherent lock, but it should do
