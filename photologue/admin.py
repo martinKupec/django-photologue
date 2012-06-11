@@ -128,6 +128,7 @@ class VideoConvertAdmin(admin.ModelAdmin):
         if not convert.converted and not convert.inprogress:
             return _("Queued") 
         path = convert.video._get_SIZE_filename(convert.videosize.name, invalid_ok=True)
+        print path
         try:
             s = os.stat(path)
             fsize = s.st_size
@@ -278,6 +279,9 @@ class RaceAdmin(admin.ModelAdmin):
     list_editable = ['rider', 'horse', 'level', 'event']
     search_fields = ['video__title']
     list_per_page = 30
+
+    class Media:
+        js = ['js/filter.js']
 
     def admin_thumbnail(self, obj):
         thumb = obj.video.admin_thumbnail();

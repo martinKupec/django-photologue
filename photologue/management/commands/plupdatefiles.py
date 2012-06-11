@@ -12,7 +12,6 @@ from django.template.defaultfilters import slugify
 
 from photologue.models import MediaSize, MediaModel, GalleryItemBase, Video, Photo, MediaSizeCache
 from photologue.default_settings import *
-from photologue.utils.video import video_sizes
 from photologue.utils.upload import move_file
 from photologue.models.video import poster_unconverted
 

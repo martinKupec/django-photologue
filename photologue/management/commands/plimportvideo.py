@@ -69,12 +69,11 @@ def hash_videos():
     return (db, names)
 
 def save_db(db):
-    fcache = open(fncache + '.tmp', 'w')
+    fcache = open(fncache, 'w')
     for key, value in db.items():
         atime = os.path.getatime(value)
         fcache.write("%(hash)s %(atime)f %(file)s\n" % dict(hash=key, file=value, atime=atime))
     fcache.close()
-    shutil.move(fncache + '.tmp', fncache)
 
 def update_db(hash, path):
     fcache = open(fncache, 'a')
