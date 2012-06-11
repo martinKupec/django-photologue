@@ -116,7 +116,7 @@ class VideoConvertAdmin(admin.ModelAdmin):
     list_display = ('video', 'videosize', 'status', 'the_time', 'access_date')
     list_filter = ['videosize', 'converted']
     exclude = ('time',)
-    search_fields = ['video']
+    search_fields = ['video__file']
     list_per_page = 100
     list_max_show_all = 600
 
