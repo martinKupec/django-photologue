@@ -228,6 +228,7 @@ admin.site.register(VideoSize, VideoSizeAdmin)
 admin.site.register(VideoConvert, VideoConvertAdmin)
 
 from django.core.urlresolvers import reverse
+from django.contrib.admin import RelatedFieldListFilter
 from photologue.management.commands.plcleanup import cleanup_videos
 from cStringIO import StringIO
 import sys
@@ -271,11 +272,17 @@ class RaceFormAdmin(forms.ModelForm):
         super(RaceFormAdmin, self).__init__(*args, **kwargs)
         self.fields['video'].queryset = Video.objects.exclude(pk__in=Race.objects.exclude(id=self.instance.id).values('video'))
 
+class EventFilter(RelatedFieldListFilter):
+	def __init__(self, field, *args, **kwargs):
+		field._choices = [(event.id, event.day_start.isoformat() + " " + event.venue.title)
+			for event in field.rel.to._default_manager.complex_filter(field.rel.limit_choices_to)]
+		super(EventFilter, self).__init__(field, *args, **kwargs)
+
 class RaceAdmin(admin.ModelAdmin):
     form = RaceFormAdmin
 
     list_display = ('video', 'rider', 'horse', 'level', 'event', 'admin_thumbnail')
-    list_filter = ['rider', 'horse', 'level', 'event']
+    list_filter = ['rider', 'horse', 'level', ('event', EventFilter)]
     list_editable = ['rider', 'horse', 'level', 'event']
     search_fields = ['video__title']
     list_per_page = 30
@@ -302,7 +309,7 @@ class NonRaceVideoAdmin(VideoAdmin):
     list_max_show_all = 600
 
     def queryset(self, request):
-        return NonRaceVideo.objects.exclude(id__in=Race.objects.values('video'))
+        return NonRaceVideo.objects.exclude(pk__in=Race.objects.values('video'))
 
     def erase(self, request, changelist):
         self.cleanup(request, changelist, 'erase')

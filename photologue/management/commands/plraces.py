@@ -24,7 +24,7 @@ def refresh_races():
     """
 
     events = Event.objects.all()
-    videos = Video.objects.exclude(id__in=Race.objects.values('video'))
+    videos = Video.objects.exclude(pk__in=Race.objects.values('video'))
 
     for video in videos:
         event = events.filter(day_start__lte=video.date_taken, day_end__gte=video.date_taken)
