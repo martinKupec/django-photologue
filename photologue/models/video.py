@@ -200,6 +200,8 @@ class VideoSize(MediaSize):
                     it is slower, but the result is generally better.'))
     letterbox = models.BooleanField(_('letterbox'), default=True, help_text=_('If enabled and aspect ratio is not matching,\
                     put the video in black box.'))
+    deinterlace = models.BooleanField(_('deinterlace?'), default=True, help_text=_('If enabled use deinterlace filter\
+                    when not able to recognice video type(sadly most cases)'))
     videobitrate = models.PositiveIntegerField(_('video bitrate (kbps)'), default=1000, help_text=_('Video bitrate in kilobits per second.'))
     audiobitrate = models.PositiveIntegerField(_('audio bitrate (kbps)'), default=128, help_text=_('Audio bitrate in kilobits per second.\
                     When set to 0, it will mute audio.'))

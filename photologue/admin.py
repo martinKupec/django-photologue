@@ -189,7 +189,7 @@ class VideoSizeAdmin(SlowDeleteModelAdmin):
             'fields': ('name', 'width', 'height', 'videotype')
         }),
         ('Options', {
-            'fields': ('twopass', 'upscale', 'crop', 'letterbox', 'increment_count')
+            'fields': ('twopass', 'upscale', 'crop', 'letterbox', 'increment_count', 'deinterlace')
         }),
         ('Quality', {
             'fields': ('videobitrate', 'audiobitrate',)

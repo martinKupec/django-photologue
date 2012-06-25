@@ -82,6 +82,17 @@ def video_calculate_size(video, videosize):
         out_h = int(out_w/in_aspect)
     return (out_w, out_h)
 
+def construct_filter(*args):
+    f = ''
+    for arg in args:
+        if len(arg) != 0:
+            if len(f) != 0:
+                f += ','
+            f += arg
+    if len(f) != 0:
+        return '-vf ' + f
+    return ''
+
 def execute(command, header):
     print header
     print "Command: %s\n" % command
@@ -116,12 +127,13 @@ def video_create_poster(videopath, poster, video_data):
     grabimage = (   '%(ffmpeg)s -y -i "%(infile)s" '
                     '-vframes 1 -ss %(postertime)s -an '
                     '-vcodec mjpeg -f rawvideo '
-                    '-s %(size)s %(outfile)s'
+                    '%(filt)s -s %(size)s %(outfile)s'
                     ) % dict(
                         ffmpeg=FFMPEG,
                         infile=videopath,
                         postertime=poster_time,
                         outfile=thumbnailfile.name,
+                        filt=construct_filter(video_data['deinterlace']),
                         size="%dx%d" % (video_data['orig_w'], video_data['orig_h'])
                     )
 
@@ -158,14 +170,16 @@ def convertvideo_flv(video_in, video_out, video_data):
     output = ""
     ffmpeg = (  '%(ffmpeg)s -y -i "%(infile)s" '
                 '-acodec %(audioc)s -ar %(audiosr)s -ab %(audiobr)s '
-                '-f flv %(letterboxing)s -s %(size)s %(outfile)s'
+                '-f flv %(filt)s -s %(size)s %(outfile)s'
                 ) % dict(
                     ffmpeg=FFMPEG,
                     infile=video_in,
                     audioc=AUDIO_CODEC,
                     audiosr=AUDIO_SAMPLING_RATE,
                     audiobr="%s" % video_data['audiobitrate'],
-                    letterboxing=video_data.get('letterboxing', ''),
+                    filt=construct_filter(video_data['deinterlace'],
+                            video_data.get('letterboxing', '')
+                            ),
                     size="%dx%d" % video_data['size'],
                     outfile=video_out
                 )
@@ -201,13 +215,15 @@ def convertvideo_mp4(video_in, video_out, video_data):
     output = ""
     try:
         common_options = ('-vcodec libx264 -vprofile high -preset slower -b:v %(vb)dk '
-                          '-maxrate %(vb)dk -bufsize %(bfs)dk %(letterboxing)s -vf scale=%(size)s '
+                          '-maxrate %(vb)dk -bufsize %(bfs)dk %(filt)s '
                           '-threads 0 '
                         ) % dict(
                             vb=video_data['videobitrate'],
                             bfs=2*video_data['videobitrate'],
-                            letterboxing=video_data.get('letterboxing', ''),
-                            size="%d:%d" % video_data['size'],
+                            filt=construct_filter(video_data['deinterlace'],
+                                    video_data.get('letterboxing', ''),
+                                    'scale=%d:%d' % video_data['size']
+                                    ),
                         )
         audio_pass1 = '-an '
         if not video_data['audiobitrate']:
@@ -294,14 +310,16 @@ def convertvideo_ogv(video_in, video_out, video_data):
     output = ""
     ffmpeg = (  '%(ffmpeg)s -y -i "%(infile)s" -b:v %(bitrate)s '
                 '-vcodec libtheora -acodec libvorbis '
-                '%(letterboxing)s -s %(size)s %(outfile)s '
+                '%(filt)s %(outfile)s '
                 ) % dict(
                     ffmpeg=FFMPEG,
                     infile=video_in,
-                    letterboxing=video_data.get('letterboxing', ''),
-                    size=video_data['size'],
-                    outfile=video_out,
                     bitrate="%dk" % video_data['videobitrate'],
+                       filt=construct_filter(video_data['deinterlace'],
+                            video_data.get('letterboxing', ''),
+                            'scale=%d:%d' % video_data['size']
+                            ),
+                    outfile=video_out,
                 )
 
     output += "Source : %s\n" % video_in
@@ -326,12 +344,15 @@ def convertvideo_webm(video_in, video_out, video_data):
     output = ""
     try:
         common_options = ('-codec:v libvpx -vpre libvpx-360p -quality good -cpu-used 0 -b:v %(vb)dk -qmin 10 -qmax 42 '
-                          '-maxrate %(vb)dk -bufsize %(bfs)dk -threads 2 %(letterboxing)s -vf scale=%(size)s '
+                          '-maxrate %(vb)dk -bufsize %(bfs)dk -threads 2 %(filt)s '
                         ) % dict(
                             vb=video_data['videobitrate'],
                             bfs=2*video_data['videobitrate'],
                             letterboxing=video_data.get('letterboxing', ''),
-                            size="%d:%d" % video_data['size'],
+                               filt=construct_filter(video_data['deinterlace'],
+                                video_data.get('letterboxing', ''),
+                                'scale=%d:%d' % video_data['size']
+                                ),
                         )
         audio_pass1 = '-an '
         if not video_data['audiobitrate']:

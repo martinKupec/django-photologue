@@ -97,9 +97,10 @@ def process_files():
                       'videobitrate': convert.videosize.videobitrate,
                       'audiobitrate': convert.videosize.audiobitrate,
                       'twopass': convert.videosize.twopass,
+                      'deinterlace': 'yadif' if convert.videosize.deinterlace else '',
                       }
         if convert.videosize.letterbox:
-            video_data['letterboxing'] = '-vf pad="%d:%d:(ow-iw)/2:(oh-ih)/2:black"' % (out_w, out_h)
+            video_data['letterboxing'] = 'pad="%d:%d:(ow-iw)/2:(oh-ih)/2:black"' % (out_w, out_h)
 
         # Create poster
         try:
