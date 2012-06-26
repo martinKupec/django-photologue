@@ -1,18 +1,13 @@
 import os
 import time
-from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from django.core.files.base import File
 from django.core.files.move import file_move_safe
-from django.core.files.storage import FileSystemStorage
 from django.utils.translation import ugettext_lazy as _
-from django.utils.timezone import now, is_aware, make_aware, get_current_timezone, localtime
-from django.template.defaultfilters import slugify
+from django.utils.timezone import get_current_timezone
 
-from photologue.models import MediaSize, MediaModel, GalleryItemBase, Video, Photo, MediaSizeCache
+from photologue.models import GalleryItemBase, MediaSizeCache
 from photologue.default_settings import *
-from photologue.utils.video import video_sizes
 from photologue.utils.upload import move_file
 from photologue.models.video import poster_unconverted
 
@@ -27,7 +22,11 @@ class Command(BaseCommand):
 
 def update_item(item, newname):
         file_root = os.path.join(settings.MEDIA_ROOT, get_storage_path(item, ''))
-        path = item.file.path
+        try:
+            path = item.file.path
+        except:
+            print "Not media item: ", item, " - ", newname
+            return
         if not os.path.exists(path):
             print newname, ": files doesn't exist: ", path
             return
