@@ -273,10 +273,12 @@ class RaceFormAdmin(forms.ModelForm):
         self.fields['video'].queryset = Video.objects.exclude(pk__in=Race.objects.exclude(id=self.instance.id).values('video'))
 
 class EventFilter(RelatedFieldListFilter):
-	def __init__(self, field, *args, **kwargs):
-		field._choices = [(event.id, event.day_start.isoformat() + " " + event.venue.title)
-			for event in field.rel.to._default_manager.complex_filter(field.rel.limit_choices_to)]
-		super(EventFilter, self).__init__(field, *args, **kwargs)
+        def __init__(self, field, *args, **kwargs):
+                def get_choices(*args, **kwargs):
+                        return [(event.id, event.day_start.isoformat() + " " + event.venue.title)
+                                for event in field.rel.to._default_manager.complex_filter(field.rel.limit_choices_to)]
+                field.get_choices = get_choices
+                super(EventFilter, self).__init__(field, *args, **kwargs)
 
 class RaceAdmin(admin.ModelAdmin):
     form = RaceFormAdmin
